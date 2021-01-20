@@ -11,37 +11,33 @@ import java.util.ArrayList;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = false)
-public class HomeInfo {
+public final class HomeInfo {
 
-    public static HomeInfo inflate(@NonNull String json) throws JSONException {
-        JSONObject jsonObj = new JSONObject(json);
-
-        HomeInfo home = new HomeInfo();
-
-        home.setCloudUrl(jsonObj.optString(JSONKeys.CLOUD_URL));
-        home.setId(jsonObj.optString(JSONKeys.ID));
-        home.setLocalHttpsUrl(jsonObj.optString(JSONKeys.LOCAL_HTTPS_URL));
-        home.setMode(jsonObj.optString(JSONKeys.MODE));
-        home.setName(jsonObj.optString(JSONKeys.NAME));
+    public static HomeInfo inflate(@NonNull JSONObject jsonObj) throws JSONException {
+        ArrayList<String> names = new ArrayList<>();
 
         JSONArray objectNames = jsonObj.optJSONArray(JSONKeys.OBJECT_NAME);
         if (objectNames != null) {
-            ArrayList<String> names = home.getObjectNames();
             for (int i = 0; i < objectNames.length(); i++) {
                 names.add(objectNames.optString(i));
             }
         }
 
-        return home;
+        return new HomeInfo()
+                .setCloudUrl(jsonObj.optString(JSONKeys.CLOUD_URL))
+                .setId(jsonObj.getString(JSONKeys.ID))
+                .setLocalHttpsUrl(jsonObj.optString(JSONKeys.LOCAL_HTTPS_URL))
+                .setMode(jsonObj.optString(JSONKeys.MODE))
+                .setName(jsonObj.optString(JSONKeys.NAME))
+                .setObjectNames(names);
     }
 
-    private final ArrayList<String> mObjectNames = new ArrayList<>();
-
-    private String mCloudUrl;
-    private String mId;
-    private String mLocalHttpsUrl;
-    private String mMode;
-    private String mName;
+    private String            mCloudUrl;
+    private String            mId;
+    private String            mLocalHttpsUrl;
+    private String            mMode;
+    private String            mName;
+    private ArrayList<String> mObjectNames;
 
     private HomeInfo() {
         // prevent construction except through inflate method
@@ -72,44 +68,60 @@ public class HomeInfo {
         return mObjectNames;
     }
 
-    public void setCloudUrl(String cloudUrl) {
+    HomeInfo setCloudUrl(String cloudUrl) {
         mCloudUrl = cloudUrl;
+
+        return this;
     }
 
-    public void setId(String id) {
+    HomeInfo setId(String id) {
         mId = id;
+
+        return this;
     }
 
-    public void setLocalHttpsUrl(String localHttpsUrl) {
+    HomeInfo setLocalHttpsUrl(String localHttpsUrl) {
         mLocalHttpsUrl = localHttpsUrl;
+
+        return this;
     }
 
-    public void setMode(String mode) {
+    HomeInfo setMode(String mode) {
         mMode = mode;
+
+        return this;
     }
 
-    public void setName(String name) {
+    HomeInfo setName(String name) {
         mName = name;
+
+        return this;
+    }
+
+    HomeInfo setObjectNames(ArrayList<String> objectNames) {
+        mObjectNames = objectNames;
+
+        return this;
     }
 
     @NonNull
     @Override
     public String toString() {
         JSONObject jsonObj = new JSONObject();
+        JSONArray objectNames = new JSONArray();
 
         try {
-            jsonObj.putOpt(JSONKeys.CLOUD_URL, mCloudUrl);
-            jsonObj.putOpt(JSONKeys.ID, mId);
-            jsonObj.putOpt(JSONKeys.LOCAL_HTTPS_URL, mLocalHttpsUrl);
-            jsonObj.putOpt(JSONKeys.MODE, mMode);
-            jsonObj.putOpt(JSONKeys.NAME, mName);
+            jsonObj.putOpt(JSONKeys.CLOUD_URL, mCloudUrl)
+                    .putOpt(JSONKeys.ID, mId)
+                    .putOpt(JSONKeys.LOCAL_HTTPS_URL, mLocalHttpsUrl)
+                    .putOpt(JSONKeys.MODE, mMode)
+                    .putOpt(JSONKeys.NAME, mName)
+                    .putOpt(JSONKeys.OBJECT_NAME, objectNames);
 
-            JSONArray objectNames = new JSONArray();
-
-            jsonObj.putOpt(JSONKeys.OBJECT_NAME, objectNames);
-
-            for (String object : mObjectNames) {
-                objectNames.put(object);
+            if (mObjectNames != null && mObjectNames.size() > 0) {
+                for (String object : mObjectNames) {
+                    objectNames.put(object);
+                }
             }
 
             return jsonObj.toString(2);

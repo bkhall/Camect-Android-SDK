@@ -17,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.camect.android.sdk.CamectSDK;
 import com.camect.android.sdk.R;
 import com.camect.android.sdk.example.util.AsyncTask;
+import com.camect.android.sdk.model.Camera;
+import com.camect.android.sdk.model.HomeInfo;
 
 import java.util.ArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -31,10 +33,28 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
     private final ArrayList<Method>  mMethods  = new ArrayList<>();
 
     private void buildList() {
-        mMethods.add(new Method("Get Home Info") {
+        mMethods.add(new Method<HomeInfo>("Get Home Info") {
             @Override
-            protected Object doInBackground(Void... voids) {
+            protected HomeInfo doInBackground(Void... voids) {
                 return CamectSDK.getInstance().getHomeInfo();
+            }
+        });
+        mMethods.add(new Method<Boolean>("Set Mode to HOME") {
+            @Override
+            protected Boolean doInBackground(Void... voids) {
+                return CamectSDK.getInstance().setMode(CamectSDK.Mode.HOME);
+            }
+        });
+        mMethods.add(new Method<Boolean>("Set Mode to AWAY") {
+            @Override
+            protected Boolean doInBackground(Void... voids) {
+                return CamectSDK.getInstance().setMode(CamectSDK.Mode.AWAY);
+            }
+        });
+        mMethods.add(new Method<ArrayList<Camera>>("List Cameras") {
+            @Override
+            protected ArrayList<Camera> doInBackground(Void... voids) {
+                return CamectSDK.getInstance().getCameras();
             }
         });
     }
@@ -90,7 +110,7 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
         }
     }
 
-    private abstract class Method extends AsyncTask<Void, Void, Object> {
+    public abstract class Method<T> extends AsyncTask<Void, Void, T> {
         private final String mName;
 
         private Method(String name) {
@@ -104,9 +124,9 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
         }
 
         @Override
-        protected void onPostExecute(Object object) {
+        protected void onPostExecute(T result) {
             ModelInspectorDialogFragment fragment = ModelInspectorDialogFragment
-                    .newInstance(mName, object.toString());
+                    .newInstance(mName, result.toString());
 
             fragment.show(getChildFragmentManager(), null);
         }
@@ -129,7 +149,7 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
 
         @Override
         public void onBindViewHolder(@NonNull MethodViewHolder holder, int position) {
-            Method method = mMethods.get(position);
+            Method<?> method = mMethods.get(position);
 
             holder.mName.setText(method.getName());
         }

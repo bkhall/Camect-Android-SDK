@@ -5,15 +5,22 @@ import android.text.TextUtils;
 import android.webkit.WebSettings;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
+import com.camect.android.sdk.model.Camera;
 import com.camect.android.sdk.model.HomeInfo;
 import com.camect.android.sdk.network.LoggingInterceptor;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Cache;
 import okhttp3.Credentials;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -47,6 +54,14 @@ public class CamectSDK {
         return sInstance != null;
     }
 
+    public static void setLoggingEnabled(boolean enable) {
+        if (enable) {
+            Timber.plant(new Timber.DebugTree());
+        } else {
+            Timber.uprootAll();
+        }
+    }
+
     private final Context mContext;
     private final String  mPassword;
     private final String  mUserAgent;
@@ -62,13 +77,7 @@ public class CamectSDK {
             throw new IllegalArgumentException("An invalid parameter was passed.");
         }
 
-
-        if (BuildConfig.DEBUG) {
-            Timber.plant(new Timber.DebugTree());
-        }
-
         mContext = context.getApplicationContext();
-
         mUserAgent = WebSettings.getDefaultUserAgent(mContext);
         mUsername = username;
         mPassword = password;
@@ -76,6 +85,37 @@ public class CamectSDK {
         updateHost(host);
     }
 
+    @NonNull
+    @WorkerThread
+    public ArrayList<Camera> getCameras() {
+        Request request = getStandardRequest()
+                .url(mHost + "ListCameras")
+                .get()
+                .build();
+
+        ArrayList<Camera> cameras = new ArrayList<>();
+
+        try (Response response = mHttpClient.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String json = response.body().string();
+
+                JSONObject jsonObject = new JSONObject(json);
+                JSONArray jsonArray = jsonObject.getJSONArray("camera");
+
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    jsonObject = jsonArray.getJSONObject(i);
+
+                    cameras.add(Camera.inflate(jsonObject));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return cameras;
+    }
+
+    @Nullable
     @WorkerThread
     public HomeInfo getHomeInfo() {
         Request request = getStandardRequest()
@@ -84,10 +124,12 @@ public class CamectSDK {
                 .build();
 
         try (Response response = mHttpClient.newCall(request).execute()) {
-            if (response.code() == 200) {
+            if (response.isSuccessful()) {
                 String json = response.body().string();
 
-                return HomeInfo.inflate(json);
+                JSONObject jsonObject = new JSONObject(json);
+
+                return HomeInfo.inflate(jsonObject);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -97,14 +139,32 @@ public class CamectSDK {
     }
 
     private Request.Builder getStandardRequest() {
-        Request.Builder builder = new Request.Builder()
+        return new Request.Builder()
                 .header("Accept", "application/json")
                 .header("User-Agent", mUserAgent);
-
-        return builder;
     }
 
-    public void updateHost(String host) {
+    @WorkerThread
+    public boolean setMode(@NonNull Mode mode) {
+        HttpUrl url = HttpUrl.parse(mHost + "SetOperationMode").newBuilder()
+                .addQueryParameter("Mode", mode.getValue())
+                .build();
+
+        Request request = getStandardRequest()
+                .url(url)
+                .get()
+                .build();
+
+        try (Response response = mHttpClient.newCall(request).execute()) {
+            return response.isSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public void updateHost(@NonNull String host) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .cache(new Cache(mContext.getCacheDir(), 1024 * 1024 * 2))
                 .pingInterval(30, TimeUnit.SECONDS) // for the websocket
@@ -112,11 +172,8 @@ public class CamectSDK {
                     String credential = Credentials.basic(mUsername, mPassword);
                     return response.request().newBuilder().header("Authorization",
                             credential).build();
-                });
-
-        if (BuildConfig.DEBUG) {
-            builder.addInterceptor(new LoggingInterceptor());
-        }
+                })
+                .addInterceptor(new LoggingInterceptor());
 
         // are we using a CamectID or an IPv4 Address
         String[] elements = host.split("\\.");
@@ -147,5 +204,19 @@ public class CamectSDK {
         mHost = "https://" + host + ":443/api/";
 
         mHttpClient = builder.build();
+    }
+
+    public enum Mode {
+        HOME("HOME"), AWAY("NORMAL");
+
+        private final String mValue;
+
+        Mode(String value) {
+            mValue = value;
+        }
+
+        public String getValue() {
+            return mValue;
+        }
     }
 }

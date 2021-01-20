@@ -75,7 +75,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
 
                     getFragmentManager().beginTransaction()
                             .replace(R.id.container, MethodsFragment.newInstance())
-                            .addToBackStack("methods")
                             .commit();
                 }
             }
