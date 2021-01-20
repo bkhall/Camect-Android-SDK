@@ -7,10 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.camect.android.sdk.R;
-
-import java.util.ArrayList;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -18,16 +14,36 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class MethodsFragment extends Fragment implements OnItemClickListener {
+import com.camect.android.sdk.CamectSDK;
+import com.camect.android.sdk.R;
+import com.camect.android.sdk.example.util.AsyncTask;
 
-    private static final ArrayList<Method> sMethods = new ArrayList<>();
+import java.util.ArrayList;
+import java.util.concurrent.ThreadPoolExecutor;
+
+public class MethodsFragment extends Fragment implements OnItemClickListener {
 
     public static MethodsFragment newInstance() {
         return new MethodsFragment();
     }
 
-    static {
-        sMethods.add(new Method("Get Home Info", "GetHomeInfo"));
+    private final ThreadPoolExecutor mExecutor = AsyncTask.newCachedThreadPool();
+    private final ArrayList<Method>  mMethods  = new ArrayList<>();
+
+    private void buildList() {
+        mMethods.add(new Method("Get Home Info") {
+            @Override
+            protected Object doInBackground(Void... voids) {
+                return CamectSDK.getInstance().getHomeInfo();
+            }
+        });
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        buildList();
     }
 
     @Override
@@ -37,8 +53,15 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
     }
 
     @Override
-    public void onItemClick(View view, int position, long id) {
+    public void onDestroyView() {
+        mExecutor.shutdownNow();
 
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onItemClick(View view, int position, long id) {
+        mMethods.get(position).executeNow();
     }
 
     @Override
@@ -50,24 +73,6 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
         recyclerView.addItemDecoration(decoration);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(new MethodsAdapter(getActivity(), this));
-    }
-
-    private static class Method {
-        private final String mEndpoint;
-        private final String mName;
-
-        private Method(String name, String endpoint) {
-            mName = name;
-            mEndpoint = endpoint;
-        }
-
-        public String getEndpoint() {
-            return mEndpoint;
-        }
-
-        public String getName() {
-            return mName;
-        }
     }
 
     private static class MethodViewHolder extends RecyclerView.ViewHolder {
@@ -85,7 +90,29 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
         }
     }
 
-    private static class MethodsAdapter extends RecyclerView.Adapter<MethodViewHolder> {
+    private abstract class Method extends AsyncTask<Void, Void, Object> {
+        private final String mName;
+
+        private Method(String name) {
+            super(mExecutor);
+
+            mName = name;
+        }
+
+        public String getName() {
+            return mName;
+        }
+
+        @Override
+        protected void onPostExecute(Object object) {
+            ModelInspectorDialogFragment fragment = ModelInspectorDialogFragment
+                    .newInstance(mName, object.toString());
+
+            fragment.show(getChildFragmentManager(), null);
+        }
+    }
+
+    private class MethodsAdapter extends RecyclerView.Adapter<MethodViewHolder> {
 
         private final LayoutInflater      mInflater;
         private final OnItemClickListener mListener;
@@ -97,12 +124,12 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
 
         @Override
         public int getItemCount() {
-            return sMethods.size();
+            return mMethods.size();
         }
 
         @Override
         public void onBindViewHolder(@NonNull MethodViewHolder holder, int position) {
-            Method method = sMethods.get(position);
+            Method method = mMethods.get(position);
 
             holder.mName.setText(method.getName());
         }

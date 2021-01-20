@@ -39,6 +39,9 @@ public abstract class AsyncTask<INPUT, PROGRESS, RESULT> implements Runnable {
     private RESULT             mResult;
     private Thread             mThread;
 
+    public AsyncTask() {
+    }
+
     public AsyncTask(@NonNull ThreadPoolExecutor executor) {
         mExecutor = executor;
     }
@@ -86,6 +89,12 @@ public abstract class AsyncTask<INPUT, PROGRESS, RESULT> implements Runnable {
         execute(false);
     }
 
+    public void execute(ThreadPoolExecutor executor) {
+        mExecutor = executor;
+
+        execute(false);
+    }
+
     private void execute(boolean important) {
         if (mExecutor == null) {
             throw new RuntimeException("Executor not specified. You must specify the executor in " +
@@ -112,7 +121,29 @@ public abstract class AsyncTask<INPUT, PROGRESS, RESULT> implements Runnable {
         execute(false);
     }
 
+    public void execute(ThreadPoolExecutor executor, INPUT... inputs) {
+        mExecutor = executor;
+
+        mInputs = inputs;
+
+        execute(false);
+    }
+
     public void executeNow() {
+        execute(true);
+    }
+
+    public void executeNow(ThreadPoolExecutor executor) {
+        mExecutor = executor;
+
+        execute(true);
+    }
+
+    public void executeNow(ThreadPoolExecutor executor, INPUT... inputs) {
+        mExecutor = executor;
+
+        mInputs = inputs;
+
         execute(true);
     }
 
