@@ -10,10 +10,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-
 import com.camect.android.sdk.CamectSDK;
 import com.camect.android.sdk.R;
 import com.camect.android.sdk.example.util.AsyncTask;
@@ -21,6 +17,10 @@ import com.camect.android.sdk.model.HomeInfo;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.concurrent.ThreadPoolExecutor;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 public class MainFragment extends Fragment implements View.OnClickListener, TextWatcher {
 
@@ -72,21 +72,17 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
                     mSnackbar.dismiss();
                 }
 
-                ModelInspectorDialogFragment fragment = ModelInspectorDialogFragment.newInstance(
-                        "HomeInfo", text);
-                fragment.show(getChildFragmentManager(), null);
-
-                getActivity().getSupportFragmentManager().beginTransaction()
+                getFragmentManager().beginTransaction()
                         .replace(R.id.container, MethodsFragment.newInstance())
                         .addToBackStack("methods")
-                        .commitNow();
+                        .commit();
 
                 mConnect.setEnabled(true);
             }
 
             @Override
             protected void onProgressUpdate(Void... progress) {
-                mSnackbar = Snackbar.make(mCamectId, "Getting Home Info...",
+                mSnackbar = Snackbar.make(mCamectId, "Connecting...",
                         Snackbar.LENGTH_INDEFINITE);
                 mSnackbar.setAction("Cancel", v -> {
                     cancel(true);

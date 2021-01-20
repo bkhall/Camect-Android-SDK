@@ -4,14 +4,13 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.webkit.WebSettings;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
-
 import com.camect.android.sdk.model.HomeInfo;
 import com.camect.android.sdk.network.LoggingInterceptor;
 
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 import okhttp3.Cache;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
@@ -57,8 +56,9 @@ public class CamectSDK {
     private CamectSDK(Context context, @NonNull String id, @NonNull String username,
                       @NonNull String password) {
 
-        if (TextUtils.isEmpty(id) || TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
-            throw new IllegalArgumentException("A null or empty string was passed.");
+        if (TextUtils.isEmpty(id) || id.length() < 9 || TextUtils.isEmpty(username) ||
+                TextUtils.isEmpty(password)) {
+            throw new IllegalArgumentException("An invalid parameter was passed.");
         }
 
         mContext = context.getApplicationContext();
