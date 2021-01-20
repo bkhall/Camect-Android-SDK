@@ -34,9 +34,8 @@ public class CamerasFragment extends Fragment implements OnItemClickListener,
         return new CamerasFragment();
     }
 
-    private final ThreadPoolExecutor mExecutor = AsyncTask.newCachedThreadPool();
-
-    private CamectViewModel mViewModel;
+    private ThreadPoolExecutor mExecutor;
+    private CamectViewModel    mViewModel;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -56,6 +55,11 @@ public class CamerasFragment extends Fragment implements OnItemClickListener,
         Camera camera = mViewModel.getCameras().get(position);
 
         mViewModel.setSelectedCamera(camera);
+
+        getFragmentManager().beginTransaction()
+                .replace(R.id.container, StreamFragment.newInstance())
+                .addToBackStack("stream")
+                .commit();
     }
 
     @Override
@@ -72,6 +76,8 @@ public class CamerasFragment extends Fragment implements OnItemClickListener,
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
+
+        mExecutor = AsyncTask.newCachedThreadPool();
 
         RecyclerView recyclerView = (RecyclerView) view;
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));

@@ -29,13 +29,11 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
     public static MainFragment newInstance() {
         return new MainFragment();
     }
-
-    private final ThreadPoolExecutor mExecutor = AsyncTask.newSingleThreadExecutor();
-
-    private EditText        mCamectId;
-    private Button          mConnect;
-    private EditText        mPassword;
-    private CamectViewModel mViewModel;
+    private EditText           mCamectId;
+    private Button             mConnect;
+    private ThreadPoolExecutor mExecutor;
+    private EditText           mPassword;
+    private CamectViewModel    mViewModel;
 
     @Override
     public void afterTextChanged(Editable s) {
@@ -138,6 +136,8 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
+
+        mExecutor = AsyncTask.newSingleThreadExecutor();
 
         mCamectId = view.findViewById(R.id.camect_id);
         mCamectId.addTextChangedListener(this);

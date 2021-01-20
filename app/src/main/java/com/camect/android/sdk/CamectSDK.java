@@ -272,7 +272,7 @@ public class CamectSDK {
     }
 
     public enum Mode {
-        HOME("HOME"), AWAY("NORMAL");
+        HOME("HOME"), AWAY("DEFAULT");
 
         private final String mValue;
 

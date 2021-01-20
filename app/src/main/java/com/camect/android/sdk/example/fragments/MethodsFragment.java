@@ -31,12 +31,14 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
         return new MethodsFragment();
     }
 
-    private final ThreadPoolExecutor   mExecutor = AsyncTask.newCachedThreadPool();
-    private final ArrayList<Method<?>> mMethods  = new ArrayList<>();
+    private final ArrayList<Method<?>> mMethods = new ArrayList<>();
 
-    private CamectViewModel mViewModel;
+    private ThreadPoolExecutor mExecutor;
+    private CamectViewModel    mViewModel;
 
     private void buildList() {
+        mMethods.clear();
+
         mMethods.add(new Method<HomeInfo>("Get Home Info") {
             @Override
             protected HomeInfo doInBackground(Void... voids) {
@@ -85,15 +87,11 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
                         .replace(R.id.container, CamerasFragment.newInstance())
                         .addToBackStack("cameras")
                         .commit();
+
+                // reset this task so it can run again
+                reset();
             }
         });
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        buildList();
     }
 
     @Override
@@ -117,6 +115,10 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
+
+        mExecutor = AsyncTask.newSingleThreadExecutor();
+
+        buildList();
 
         DividerItemDecoration decoration = new DividerItemDecoration(getContext(),
                 DividerItemDecoration.VERTICAL);
@@ -161,6 +163,9 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
                     .newInstance(mName, result.toString());
 
             fragment.show(getChildFragmentManager(), null);
+
+            // reset this task so it can run again
+            reset();
         }
     }
 
