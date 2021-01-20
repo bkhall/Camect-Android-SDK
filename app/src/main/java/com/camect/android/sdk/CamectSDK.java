@@ -1,7 +1,10 @@
 package com.camect.android.sdk;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.webkit.WebSettings;
 
 import androidx.annotation.NonNull;
@@ -83,6 +86,37 @@ public class CamectSDK {
         mPassword = password;
 
         updateHost(host);
+    }
+
+    @WorkerThread
+    public Bitmap getCameraSnapshot(@NonNull String cameraId, int width, int height) {
+        HttpUrl url = HttpUrl.parse(mHost + "SnapshotCamera").newBuilder()
+                .addQueryParameter("CamId", cameraId)
+                .addQueryParameter("Width", String.valueOf(width))
+                .addQueryParameter("Height", String.valueOf(height))
+                .build();
+
+        Request request = getStandardRequest()
+                .url(url)
+                .get()
+                .build();
+
+        try (Response response = mHttpClient.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String json = response.body().string();
+
+                JSONObject jsonObject = new JSONObject(json);
+                String base64ImageString = jsonObject.getString("jpeg_data");
+
+                byte[] imageBytes = Base64.decode(base64ImageString, Base64.DEFAULT);
+
+                return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     @NonNull

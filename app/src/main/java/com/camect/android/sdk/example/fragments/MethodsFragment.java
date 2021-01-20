@@ -29,8 +29,8 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
         return new MethodsFragment();
     }
 
-    private final ThreadPoolExecutor mExecutor = AsyncTask.newCachedThreadPool();
-    private final ArrayList<Method>  mMethods  = new ArrayList<>();
+    private final ThreadPoolExecutor   mExecutor = AsyncTask.newCachedThreadPool();
+    private final ArrayList<Method<?>> mMethods  = new ArrayList<>();
 
     private void buildList() {
         mMethods.add(new Method<HomeInfo>("Get Home Info") {
@@ -56,6 +56,14 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
             protected ArrayList<Camera> doInBackground(Void... voids) {
                 return CamectSDK.getInstance().getCameras();
             }
+
+            @Override
+            protected void onPostExecute(ArrayList<Camera> cameras) {
+                getFragmentManager().beginTransaction()
+                        .replace(R.id.container, CamerasFragment.newInstance(cameras))
+                        .addToBackStack("cameras")
+                        .commit();
+            }
         });
     }
 
@@ -69,7 +77,7 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_methods_list, container, false);
+        return inflater.inflate(R.layout.fragment_list, container, false);
     }
 
     @Override
