@@ -71,6 +71,7 @@ public class CamectSDK {
     private final String  mUsername;
 
     private String       mHost;
+    private String       mHostUrl;
     private OkHttpClient mHttpClient;
 
     private CamectSDK(Context context, @NonNull String host, @NonNull String username,
@@ -90,7 +91,7 @@ public class CamectSDK {
 
     @WorkerThread
     public Bitmap getCameraSnapshot(@NonNull String cameraId, int width, int height) {
-        HttpUrl url = HttpUrl.parse(mHost + "SnapshotCamera").newBuilder()
+        HttpUrl url = HttpUrl.parse(mHostUrl + "SnapshotCamera").newBuilder()
                 .addQueryParameter("CamId", cameraId)
                 .addQueryParameter("Width", String.valueOf(width))
                 .addQueryParameter("Height", String.valueOf(height))
@@ -123,7 +124,7 @@ public class CamectSDK {
     @WorkerThread
     public ArrayList<Camera> getCameras() {
         Request request = getStandardRequest()
-                .url(mHost + "ListCameras")
+                .url(mHostUrl + "ListCameras")
                 .get()
                 .build();
 
@@ -153,7 +154,7 @@ public class CamectSDK {
     @WorkerThread
     public HomeInfo getHomeInfo() {
         Request request = getStandardRequest()
-                .url(mHost + "GetHomeInfo")
+                .url(mHostUrl + "GetHomeInfo")
                 .get()
                 .build();
 
@@ -180,7 +181,7 @@ public class CamectSDK {
 
     @WorkerThread
     public boolean setMode(@NonNull Mode mode) {
-        HttpUrl url = HttpUrl.parse(mHost + "SetOperationMode").newBuilder()
+        HttpUrl url = HttpUrl.parse(mHostUrl + "SetOperationMode").newBuilder()
                 .addQueryParameter("Mode", mode.getValue())
                 .build();
 
@@ -196,6 +197,34 @@ public class CamectSDK {
         }
 
         return false;
+    }
+
+    @WorkerThread
+    public String startHlsStream(@NonNull String cameraId) {
+        HttpUrl url = HttpUrl.parse(mHostUrl + "StartStreaming").newBuilder()
+                .addQueryParameter("Type", "1")
+                .addQueryParameter("CamId", cameraId)
+                .addQueryParameter("StreamingHost", mHost)
+                .build();
+
+        Request request = getStandardRequest()
+                .url(url)
+                .get()
+                .build();
+
+        try (Response response = mHttpClient.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String json = response.body().string();
+
+                JSONObject jsonObject = new JSONObject(json);
+
+                return jsonObject.getString("hls_url");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public void updateHost(@NonNull String host) {
@@ -235,7 +264,9 @@ public class CamectSDK {
             host += ".l.home.camect.com";
         }
 
-        mHost = "https://" + host + ":443/api/";
+        mHost = host;
+
+        mHostUrl = "https://" + host + ":443/api/";
 
         mHttpClient = builder.build();
     }

@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.camect.android.sdk.CamectSDK;
 import com.camect.android.sdk.R;
 import com.camect.android.sdk.example.util.AsyncTask;
+import com.camect.android.sdk.example.viewmodels.CamectViewModel;
 import com.camect.android.sdk.model.Camera;
 import com.camect.android.sdk.model.HomeInfo;
 
@@ -32,23 +34,41 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
     private final ThreadPoolExecutor   mExecutor = AsyncTask.newCachedThreadPool();
     private final ArrayList<Method<?>> mMethods  = new ArrayList<>();
 
+    private CamectViewModel mViewModel;
+
     private void buildList() {
         mMethods.add(new Method<HomeInfo>("Get Home Info") {
             @Override
             protected HomeInfo doInBackground(Void... voids) {
-                return CamectSDK.getInstance().getHomeInfo();
+                HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
+
+                mViewModel.setHomeInfo(homeInfo);
+
+                return mViewModel.getHomeInfo();
             }
         });
-        mMethods.add(new Method<Boolean>("Set Mode to HOME") {
+        mMethods.add(new Method<HomeInfo>("Set Mode to HOME") {
             @Override
-            protected Boolean doInBackground(Void... voids) {
-                return CamectSDK.getInstance().setMode(CamectSDK.Mode.HOME);
+            protected HomeInfo doInBackground(Void... voids) {
+                if (CamectSDK.getInstance().setMode(CamectSDK.Mode.HOME)) {
+                    HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
+
+                    mViewModel.setHomeInfo(homeInfo);
+                }
+
+                return mViewModel.getHomeInfo();
             }
         });
-        mMethods.add(new Method<Boolean>("Set Mode to AWAY") {
+        mMethods.add(new Method<HomeInfo>("Set Mode to AWAY") {
             @Override
-            protected Boolean doInBackground(Void... voids) {
-                return CamectSDK.getInstance().setMode(CamectSDK.Mode.AWAY);
+            protected HomeInfo doInBackground(Void... voids) {
+                if (CamectSDK.getInstance().setMode(CamectSDK.Mode.AWAY)) {
+                    HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
+
+                    mViewModel.setHomeInfo(homeInfo);
+                }
+
+                return mViewModel.getHomeInfo();
             }
         });
         mMethods.add(new Method<ArrayList<Camera>>("List Cameras") {
@@ -59,8 +79,10 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
 
             @Override
             protected void onPostExecute(ArrayList<Camera> cameras) {
+                mViewModel.setCameras(cameras);
+
                 getFragmentManager().beginTransaction()
-                        .replace(R.id.container, CamerasFragment.newInstance(cameras))
+                        .replace(R.id.container, CamerasFragment.newInstance())
                         .addToBackStack("cameras")
                         .commit();
             }
@@ -94,6 +116,8 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        mViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
+
         DividerItemDecoration decoration = new DividerItemDecoration(getContext(),
                 DividerItemDecoration.VERTICAL);
 

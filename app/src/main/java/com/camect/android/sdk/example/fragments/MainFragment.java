@@ -13,10 +13,12 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.camect.android.sdk.CamectSDK;
 import com.camect.android.sdk.R;
 import com.camect.android.sdk.example.util.AsyncTask;
+import com.camect.android.sdk.example.viewmodels.CamectViewModel;
 import com.camect.android.sdk.model.HomeInfo;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -30,10 +32,10 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
 
     private final ThreadPoolExecutor mExecutor = AsyncTask.newSingleThreadExecutor();
 
-    private EditText mCamectId;
-    private Button   mConnect;
-    private HomeInfo mHomeInfo;
-    private EditText mPassword;
+    private EditText        mCamectId;
+    private Button          mConnect;
+    private EditText        mPassword;
+    private CamectViewModel mViewModel;
 
     @Override
     public void afterTextChanged(Editable s) {
@@ -51,12 +53,15 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
 
             @Override
             protected HomeInfo doInBackground(Void... voids) {
-                if (mHomeInfo == null) {
+                if (mViewModel.getHomeInfo() == null) {
                     publishProgress(null);
-                    mHomeInfo = CamectSDK.getInstance().getHomeInfo();
+
+                    HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
+
+                    mViewModel.setHomeInfo(homeInfo);
                 }
 
-                return mHomeInfo;
+                return mViewModel.getHomeInfo();
             }
 
             @Override
@@ -103,12 +108,10 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
     public void onClick(View v) {
         mConnect.setEnabled(false);
 
-        if (!CamectSDK.isInitialized()) {
-            String camectId = mCamectId.getText().toString();
-            String password = mPassword.getText().toString();
+        String camectId = mCamectId.getText().toString();
+        String password = mPassword.getText().toString();
 
-            CamectSDK.init(getContext(), camectId.trim(), password.trim());
-        }
+        CamectSDK.init(getContext(), camectId.trim(), password.trim());
 
         getHomeInfo();
     }
@@ -134,6 +137,8 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        mViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
+
         mCamectId = view.findViewById(R.id.camect_id);
         mCamectId.addTextChangedListener(this);
 
