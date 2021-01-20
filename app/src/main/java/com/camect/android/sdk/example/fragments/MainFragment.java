@@ -10,6 +10,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 import com.camect.android.sdk.CamectSDK;
 import com.camect.android.sdk.R;
 import com.camect.android.sdk.example.util.AsyncTask;
@@ -17,10 +21,6 @@ import com.camect.android.sdk.model.HomeInfo;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.concurrent.ThreadPoolExecutor;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 
 public class MainFragment extends Fragment implements View.OnClickListener, TextWatcher {
 
@@ -61,23 +61,23 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
 
             @Override
             protected void onPostExecute(HomeInfo homeInfo) {
-                String text;
-                if (homeInfo == null) {
-                    text = "FAILED";
-                } else {
-                    text = homeInfo.toString();
-                }
-
                 if (mSnackbar != null && mSnackbar.isShown()) {
                     mSnackbar.dismiss();
                 }
 
-                getFragmentManager().beginTransaction()
-                        .replace(R.id.container, MethodsFragment.newInstance())
-                        .addToBackStack("methods")
-                        .commit();
+                if (homeInfo == null) {
+                    ModelInspectorDialogFragment fragment = ModelInspectorDialogFragment
+                            .newInstance("Connection Failed", null);
 
-                mConnect.setEnabled(true);
+                    fragment.show(getChildFragmentManager(), null);
+                } else {
+                    CamectSDK.getInstance().updateHost(homeInfo.getId());
+
+                    getFragmentManager().beginTransaction()
+                            .replace(R.id.container, MethodsFragment.newInstance())
+                            .addToBackStack("methods")
+                            .commit();
+                }
             }
 
             @Override

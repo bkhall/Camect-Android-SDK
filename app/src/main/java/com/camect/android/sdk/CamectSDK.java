@@ -4,13 +4,14 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.webkit.WebSettings;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
+
 import com.camect.android.sdk.model.HomeInfo;
 import com.camect.android.sdk.network.LoggingInterceptor;
 
 import java.util.concurrent.TimeUnit;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
 import okhttp3.Cache;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
@@ -46,50 +47,39 @@ public class CamectSDK {
         return sInstance != null;
     }
 
-    private final Context      mContext;
-    private final OkHttpClient mHttpClient;
-    private final String       mId;
-    private final String       mPassword;
-    private final String       mUserAgent;
-    private final String       mUsername;
+    private final Context mContext;
+    private final String  mPassword;
+    private final String  mUserAgent;
+    private final String  mUsername;
 
-    private CamectSDK(Context context, @NonNull String id, @NonNull String username,
+    private String       mHost;
+    private OkHttpClient mHttpClient;
+
+    private CamectSDK(Context context, @NonNull String host, @NonNull String username,
                       @NonNull String password) {
 
-        if (TextUtils.isEmpty(id) || id.length() < 9 || TextUtils.isEmpty(username) ||
-                TextUtils.isEmpty(password)) {
+        if (TextUtils.isEmpty(host) || TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
             throw new IllegalArgumentException("An invalid parameter was passed.");
+        }
+
+
+        if (BuildConfig.DEBUG) {
+            Timber.plant(new Timber.DebugTree());
         }
 
         mContext = context.getApplicationContext();
 
         mUserAgent = WebSettings.getDefaultUserAgent(mContext);
-
-        mId = id.substring(0, 9);
         mUsername = username;
         mPassword = password;
 
-        OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                .cache(new Cache(context.getCacheDir(), 1024 * 1024 * 2))
-                .pingInterval(30, TimeUnit.SECONDS) // for the websocket
-                .authenticator((route, response) -> {
-                    String credential = Credentials.basic(mUsername, mPassword);
-                    return response.request().newBuilder().header("Authorization", credential).build();
-                });
-
-        if (BuildConfig.DEBUG) {
-            Timber.plant(new Timber.DebugTree());
-
-            builder.addInterceptor(new LoggingInterceptor());
-        }
-
-        mHttpClient = builder.build();
+        updateHost(host);
     }
 
     @WorkerThread
     public HomeInfo getHomeInfo() {
         Request request = getStandardRequest()
-                .url(getHost() + "GetHomeInfo")
+                .url(mHost + "GetHomeInfo")
                 .get()
                 .build();
 
@@ -106,15 +96,56 @@ public class CamectSDK {
         return null;
     }
 
-    private String getHost() {
-        return "https://" + mId + ".l.home.camect.com:443/api/";
-    }
-
     private Request.Builder getStandardRequest() {
         Request.Builder builder = new Request.Builder()
                 .header("Accept", "application/json")
                 .header("User-Agent", mUserAgent);
 
         return builder;
+    }
+
+    public void updateHost(String host) {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .cache(new Cache(mContext.getCacheDir(), 1024 * 1024 * 2))
+                .pingInterval(30, TimeUnit.SECONDS) // for the websocket
+                .authenticator((route, response) -> {
+                    String credential = Credentials.basic(mUsername, mPassword);
+                    return response.request().newBuilder().header("Authorization",
+                            credential).build();
+                });
+
+        if (BuildConfig.DEBUG) {
+            builder.addInterceptor(new LoggingInterceptor());
+        }
+
+        // are we using a CamectID or an IPv4 Address
+        String[] elements = host.split("\\.");
+        if (elements.length == 4) {
+            // IPv4 Address
+            for (String element : elements) {
+                if (TextUtils.isEmpty(element)) {
+                    throw new IllegalArgumentException("IPv4 Address is invalid");
+                }
+
+                int octect = Integer.parseInt(element);
+                if (octect < 0 || octect > 255) {
+                    throw new IllegalArgumentException("IPv4 Address is invalid");
+                }
+            }
+
+            builder.hostnameVerifier((hostname, session) -> true);
+        } else {
+            // Camect ID
+            if (host.length() < 9) {
+                throw new IllegalArgumentException("Camect ID is invalid");
+            }
+
+            host = host.substring(0, 9);
+            host += ".l.home.camect.com";
+        }
+
+        mHost = "https://" + host + ":443/api/";
+
+        mHttpClient = builder.build();
     }
 }
