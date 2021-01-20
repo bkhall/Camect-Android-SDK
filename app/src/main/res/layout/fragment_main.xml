@@ -15,8 +15,9 @@
             android:id="@+id/camect_id"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Camect ID"
+            android:hint="Camect ID or IPv4 Address"
             android:inputType="text"
+            android:digits="0123456789AaBbCcDdEeFf."
             android:maxLines="1"
             android:selectAllOnFocus="true"
             android:textAppearance="?android:textAppearanceMedium" />
