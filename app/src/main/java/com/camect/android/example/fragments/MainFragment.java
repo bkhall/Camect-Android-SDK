@@ -37,6 +37,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
     private Button               mConnect;
     private ThreadPoolExecutor   mExecutor;
     private EditText             mPassword;
+    private EditText             mUsername;
 
     @Override
     public void afterTextChanged(Editable s) {
@@ -101,9 +102,11 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
 
     private boolean isReady() {
         String camectId = mCamectId.getText().toString();
+        String username = mUsername.getText().toString();
         String password = mPassword.getText().toString();
 
-        return !TextUtils.isEmpty(camectId.trim()) && !TextUtils.isEmpty(password.trim());
+        return !TextUtils.isEmpty(camectId.trim()) && !TextUtils.isEmpty(username.trim()) &&
+                !TextUtils.isEmpty(password.trim());
     }
 
     @Override
@@ -111,9 +114,10 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
         mConnect.setEnabled(false);
 
         String camectId = mCamectId.getText().toString();
+        String username = mUsername.getText().toString();
         String password = mPassword.getText().toString();
 
-        CamectSDK.init(requireContext(), camectId.trim(), password.trim());
+        CamectSDK.init(requireContext(), camectId.trim(), username.trim(), password.trim());
 
         getHomeInfo();
     }
@@ -148,6 +152,9 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
 
         mCamectId = view.findViewById(R.id.camect_id);
         mCamectId.addTextChangedListener(this);
+
+        mUsername = view.findViewById(R.id.username);
+        mUsername.addTextChangedListener(this);
 
         mPassword = view.findViewById(R.id.password);
         mPassword.addTextChangedListener(this);

@@ -8,6 +8,12 @@ import android.text.TextUtils;
 import android.util.Base64;
 import android.webkit.WebSettings;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
+
 import com.camect.android.library.model.Camera;
 import com.camect.android.library.model.HomeInfo;
 import com.camect.android.library.network.LoggingInterceptor;
@@ -18,11 +24,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
-import androidx.security.crypto.EncryptedSharedPreferences;
-import androidx.security.crypto.MasterKey;
 import okhttp3.Cache;
 import okhttp3.Credentials;
 import okhttp3.HttpUrl;
@@ -37,14 +38,6 @@ public class CamectSDK {
 
     public static CamectSDK getInstance() {
         return sInstance;
-    }
-
-    public static void init(Context context, String id, String password) {
-        synchronized (CamectSDK.class) {
-            if (sInstance == null) {
-                sInstance = new CamectSDK(context, id, "admin", password);
-            }
-        }
     }
 
     public static void init(Context context, String id, String username, String password) {
