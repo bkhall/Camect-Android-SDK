@@ -2,57 +2,69 @@ package com.camect.android.sdk.example.fragments;
 
 import android.app.Dialog;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
+import android.text.TextUtils;
+
+import com.camect.android.sdk.CamectSDK;
+import com.camect.android.sdk.example.util.AsyncTask;
+import com.camect.android.sdk.example.viewmodels.ObjectAlertViewModel;
+
+import java.util.concurrent.ThreadPoolExecutor;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
-
-import com.camect.android.sdk.R;
+import androidx.lifecycle.ViewModelProvider;
 
 public class ObjectAlertChooserDialogFragment extends DialogFragment {
 
-    public static ObjectAlertChooserDialogFragment newInstance(String title, String text) {
-        ObjectAlertChooserDialogFragment fragment = new ObjectAlertChooserDialogFragment();
-        fragment.mText = text;
-        fragment.mTitle = title;
-
-        return fragment;
+    public static ObjectAlertChooserDialogFragment newInstance() {
+        return new ObjectAlertChooserDialogFragment();
     }
 
-    private AlertDialog mAlertDialog;
-    private String      mText;
-    private String      mTitle;
+    private ThreadPoolExecutor mExecutor;
 
     @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        ObjectAlertViewModel alertViewModel =
+                new ViewModelProvider(requireActivity()).get(ObjectAlertViewModel.class);
+
+        mExecutor = AsyncTask.newCachedThreadPool();
+
+        final String[] labels = alertViewModel.getLabels();
+        final boolean[] checked = alertViewModel.getChecked();
+        final String cameraId = alertViewModel.getCameraId();
+
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setCancelable(false);
-        builder.setTitle(mTitle);
-        builder.setPositiveButton(android.R.string.ok, null);
+        builder.setCancelable(false)
+                .setTitle(TextUtils.isEmpty(cameraId) ?
+                        "Select Alerts For Home" : "Select Alerts For Camera")
+                .setMultiChoiceItems(labels, checked,
+                        (dialog, which, isChecked) -> {
+                            checked[which] = isChecked;
 
-        mAlertDialog = builder.create();
+                            new AsyncTask<Void, Void, Boolean>(mExecutor) {
+                                @Override
+                                protected Boolean doInBackground(Void... voids) {
+                                    if (TextUtils.isEmpty(cameraId)) {
+                                        return CamectSDK.getInstance()
+                                                .setAlertForHome(labels[which], isChecked);
+                                    } else {
+                                        return CamectSDK.getInstance()
+                                                .setAlertForCameras(labels[which], isChecked,
+                                                        cameraId);
+                                    }
+                                }
+                            }.executeNow();
+                        })
+                .setPositiveButton("Done", null);
 
-        return mAlertDialog;
+        return builder.create();
     }
 
-
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_model_inspector, container, false);
-    }
+    public void onDestroyView() {
+        mExecutor.shutdownNow();
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        TextView textView = view.findViewById(R.id.model_text);
-
-        textView.setText(mText);
-
-        mAlertDialog.setView(view);
+        super.onDestroyView();
     }
 }

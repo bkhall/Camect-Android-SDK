@@ -8,12 +8,6 @@ import android.text.TextUtils;
 import android.util.Base64;
 import android.webkit.WebSettings;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
-import androidx.security.crypto.EncryptedSharedPreferences;
-import androidx.security.crypto.MasterKey;
-
 import com.camect.android.sdk.model.Camera;
 import com.camect.android.sdk.model.HomeInfo;
 import com.camect.android.sdk.network.LoggingInterceptor;
@@ -24,6 +18,11 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
 import okhttp3.Cache;
 import okhttp3.Credentials;
 import okhttp3.HttpUrl;
@@ -109,54 +108,6 @@ public class CamectSDK {
         }
 
         updateHost(host);
-    }
-
-    @WorkerThread
-    public boolean disableAlert(@NonNull String reason, @NonNull String... cameraIds) {
-        return enableAlert(reason, false, cameraIds);
-    }
-
-    @WorkerThread
-    public boolean disableAlertGlobal(@NonNull String reason) {
-        return enableAlert(reason, false, (String[]) null);
-    }
-
-    @WorkerThread
-    public boolean enableAlert(@NonNull String reason, @NonNull String... cameraIds) {
-        return enableAlert(reason, true, cameraIds);
-    }
-
-    private boolean enableAlert(@NonNull String reason, boolean enable,
-                                @Nullable String... cameraIds) {
-        HttpUrl.Builder builder = HttpUrl.parse(mHostUrl + "EnableAlert").newBuilder()
-                .addQueryParameter("Reason", reason)
-                .addQueryParameter("Enable", enable ? "1" : "0");
-
-        if (cameraIds != null) {
-            for (int i = 0; i < cameraIds.length; i++) {
-                builder.addQueryParameter("CamId[" + i + "]", cameraIds[i]);
-            }
-        }
-
-        HttpUrl url = builder.build();
-
-        Request request = getStandardRequest()
-                .url(url)
-                .get()
-                .build();
-
-        try (Response response = mHttpClient.newCall(request).execute()) {
-            return response.isSuccessful();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    @WorkerThread
-    public boolean enableAlertGlobal(@NonNull String reason) {
-        return enableAlert(reason, true, (String[]) null);
     }
 
     @Nullable
@@ -277,6 +228,39 @@ public class CamectSDK {
         return new Request.Builder()
                 .header("Accept", "application/json")
                 .header("User-Agent", mUserAgent);
+    }
+
+    public boolean setAlertForCameras(@NonNull String reason, boolean enable,
+                                      @Nullable String... cameraIds) {
+        HttpUrl.Builder builder = HttpUrl.parse(mHostUrl + "EnableAlert").newBuilder()
+                .addQueryParameter("Reason", reason)
+                .addQueryParameter("Enable", enable ? "1" : "0");
+
+        if (cameraIds != null) {
+            for (int i = 0; i < cameraIds.length; i++) {
+                builder.addQueryParameter("CamId[" + i + "]", cameraIds[i]);
+            }
+        }
+
+        HttpUrl url = builder.build();
+
+        Request request = getStandardRequest()
+                .url(url)
+                .get()
+                .build();
+
+        try (Response response = mHttpClient.newCall(request).execute()) {
+            return response.isSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    @WorkerThread
+    public boolean setAlertForHome(@NonNull String reason, boolean enable) {
+        return setAlertForCameras(reason, enable, (String[]) null);
     }
 
     @Nullable

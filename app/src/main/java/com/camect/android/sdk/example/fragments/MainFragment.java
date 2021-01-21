@@ -15,6 +15,7 @@ import com.camect.android.sdk.R;
 import com.camect.android.sdk.example.util.AsyncTask;
 import com.camect.android.sdk.example.viewmodels.CamectViewModel;
 import com.camect.android.sdk.example.viewmodels.ModelInspectorViewModel;
+import com.camect.android.sdk.example.viewmodels.ObjectAlertViewModel;
 import com.camect.android.sdk.model.HomeInfo;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -36,6 +37,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
     private Button                  mConnect;
     private ThreadPoolExecutor      mExecutor;
     private ModelInspectorViewModel mInspectorViewModel;
+    private ObjectAlertViewModel    mObjectAlertViewModel;
     private EditText                mPassword;
 
     @Override
@@ -59,7 +61,10 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
 
                     HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
 
-                    mCamectViewModel.setHomeInfo(homeInfo);
+                    if (homeInfo != null) {
+                        mCamectViewModel.setHomeInfo(homeInfo);
+                        mObjectAlertViewModel.prepare(homeInfo.getObjectNames());
+                    }
                 }
 
                 return mCamectViewModel.getHomeInfo();
@@ -140,8 +145,10 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mCamectViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
-        mInspectorViewModel =
-                new ViewModelProvider(requireActivity()).get(ModelInspectorViewModel.class);
+        mInspectorViewModel = new ViewModelProvider(requireActivity())
+                .get(ModelInspectorViewModel.class);
+        mObjectAlertViewModel = new ViewModelProvider(requireActivity())
+                .get(ObjectAlertViewModel.class);
 
         mExecutor = AsyncTask.newSingleThreadExecutor();
 

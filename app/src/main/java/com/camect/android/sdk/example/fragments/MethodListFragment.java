@@ -18,6 +18,7 @@ import com.camect.android.sdk.R;
 import com.camect.android.sdk.example.util.AsyncTask;
 import com.camect.android.sdk.example.viewmodels.CamectViewModel;
 import com.camect.android.sdk.example.viewmodels.ModelInspectorViewModel;
+import com.camect.android.sdk.example.viewmodels.ObjectAlertViewModel;
 import com.camect.android.sdk.model.Camera;
 import com.camect.android.sdk.model.HomeInfo;
 
@@ -41,6 +42,7 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
 
     private final ArrayList<Method<?>> mMethods = new ArrayList<>();
 
+    private ObjectAlertViewModel    mAlertViewModel;
     private Button                  mButton;
     private CamectViewModel         mCamectViewModel;
     private ThreadPoolExecutor      mExecutor;
@@ -111,16 +113,18 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
                 return mCamectViewModel.getHomeInfo();
             }
         });
-        mMethods.add(new Method<Void>("Disable Alerts For Home") {
+        mMethods.add(new Method<Void>("Set Alerts For Home") {
             @Override
             protected Void doInBackground(Void... voids) {
                 return null;
             }
-        });
-        mMethods.add(new Method<Void>("Enable Alerts For Home") {
+
             @Override
-            protected Void doInBackground(Void... voids) {
-                return null;
+            protected void onPostExecute(Void result) {
+                mAlertViewModel.setCameraId(null);
+
+                ObjectAlertChooserDialogFragment.newInstance()
+                        .show(getChildFragmentManager(), null);
             }
         });
         mMethods.add(new Method<ArrayList<Camera>>("List Cameras") {
@@ -165,8 +169,10 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mCamectViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
-        mInspectorViewModel =
-                new ViewModelProvider(requireActivity()).get(ModelInspectorViewModel.class);
+        mInspectorViewModel = new ViewModelProvider(requireActivity())
+                .get(ModelInspectorViewModel.class);
+        mAlertViewModel = new ViewModelProvider(requireActivity())
+                .get(ObjectAlertViewModel.class);
 
         mExecutor = AsyncTask.newSingleThreadExecutor();
 

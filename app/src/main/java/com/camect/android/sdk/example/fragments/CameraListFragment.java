@@ -17,6 +17,7 @@ import com.camect.android.sdk.R;
 import com.camect.android.sdk.example.util.AsyncTask;
 import com.camect.android.sdk.example.viewmodels.CamectViewModel;
 import com.camect.android.sdk.example.viewmodels.ModelInspectorViewModel;
+import com.camect.android.sdk.example.viewmodels.ObjectAlertViewModel;
 import com.camect.android.sdk.model.Camera;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -40,6 +41,7 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
         return new CameraListFragment();
     }
 
+    private ObjectAlertViewModel    mAlertViewModel;
     private CamectViewModel         mCamectViewModel;
     private ThreadPoolExecutor      mExecutor;
     private ModelInspectorViewModel mInspectorViewModel;
@@ -97,6 +99,8 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
         mCamectViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
         mInspectorViewModel = new ViewModelProvider(requireActivity())
                 .get(ModelInspectorViewModel.class);
+        mAlertViewModel = new ViewModelProvider(requireActivity())
+                .get(ObjectAlertViewModel.class);
 
         mExecutor = AsyncTask.newCachedThreadPool();
 
@@ -108,65 +112,6 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
         RecyclerView recyclerView = view.findViewById(R.id.list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(mListAdapter);
-    }
-
-    private static class CameraViewHolder extends RecyclerView.ViewHolder {
-        public final  ImageView mDots;
-        public final  TextView  mName;
-        public final  ImageView mSnapshot;
-        private final Context   mContext;
-        public        Camera    mCamera;
-
-        public CameraViewHolder(final View view, final OnItemClickListener listener,
-                                OnItemLongClickListener longListener) {
-            super(view);
-
-            mContext = view.getContext();
-
-            mName = view.findViewById(R.id.camera_name);
-            mSnapshot = view.findViewById(R.id.snapshot);
-
-            mDots = view.findViewById(R.id.context);
-            mDots.setOnClickListener(v -> showPopupMenu());
-
-            if (listener != null) {
-                mSnapshot.setOnClickListener(v -> listener.onItemClick(view, getAdapterPosition(),
-                        getItemId()));
-            }
-
-            if (longListener != null) {
-                mSnapshot.setOnLongClickListener(v -> longListener.onItemLongClick(view,
-                        getAdapterPosition(), getItemId()));
-            }
-        }
-
-        private void showAlertsDialog() {
-            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-
-        }
-
-        private void showPopupMenu() {
-            PopupMenu popup = new PopupMenu(mContext, mDots);
-            popup.inflate(R.menu.camera_alerts_popup_menu);
-            popup.setOnMenuItemClickListener(item -> {
-                int id = item.getItemId();
-
-                if (id == R.id.rename) {
-                    Snackbar.make(mDots, "Need an API reference for this!",
-                            Snackbar.LENGTH_LONG).show();
-
-                    return true;
-                } else if (id == R.id.alerts) {
-                    showAlertsDialog();
-
-                    return true;
-                }
-
-                return false;
-            });
-
-            popup.show();
-        }
     }
 
     private class CameraListAdapter extends RecyclerView.Adapter<CameraViewHolder> {
@@ -241,6 +186,68 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
                     false);
 
             return new CameraViewHolder(view, mListener, mLongListener);
+        }
+    }
+
+    private class CameraViewHolder extends RecyclerView.ViewHolder {
+        public final  ImageView mDots;
+        public final  TextView  mName;
+        public final  ImageView mSnapshot;
+        private final Context   mContext;
+        public        Camera    mCamera;
+
+        public CameraViewHolder(final View view, final OnItemClickListener listener,
+                                OnItemLongClickListener longListener) {
+            super(view);
+
+            mContext = view.getContext();
+
+            mName = view.findViewById(R.id.camera_name);
+            mSnapshot = view.findViewById(R.id.snapshot);
+
+            mDots = view.findViewById(R.id.context);
+            mDots.setOnClickListener(v -> showPopupMenu());
+
+            if (listener != null) {
+                mSnapshot.setOnClickListener(v -> listener.onItemClick(view, getAdapterPosition(),
+                        getItemId()));
+            }
+
+            if (longListener != null) {
+                mSnapshot.setOnLongClickListener(v -> longListener.onItemLongClick(view,
+                        getAdapterPosition(), getItemId()));
+            }
+        }
+
+        private void showAlertsDialog() {
+            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+
+        }
+
+        private void showPopupMenu() {
+            PopupMenu popup = new PopupMenu(mContext, mDots);
+            popup.inflate(R.menu.camera_alerts_popup_menu);
+            popup.setOnMenuItemClickListener(item -> {
+                int id = item.getItemId();
+
+                if (id == R.id.rename) {
+                    Snackbar.make(mDots, "Need an API reference for this!",
+                            Snackbar.LENGTH_LONG).show();
+
+                    return true;
+                } else if (id == R.id.alerts) {
+                    mAlertViewModel.setCameraId(mCamera.getId());
+
+                    ObjectAlertChooserDialogFragment.newInstance()
+                            .show(getChildFragmentManager(), null);
+
+                    return true;
+                }
+
+                return false;
+            });
+
+            popup.show();
         }
     }
 }
