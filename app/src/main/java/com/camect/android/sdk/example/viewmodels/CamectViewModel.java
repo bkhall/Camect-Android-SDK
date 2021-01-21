@@ -39,7 +39,7 @@ public class CamectViewModel extends ViewModel {
         }
     }
 
-    public void setHomeInfo(@NonNull HomeInfo homeInfo) {
+    public void setHomeInfo(HomeInfo homeInfo) {
         mHomeInfo = homeInfo;
     }
 

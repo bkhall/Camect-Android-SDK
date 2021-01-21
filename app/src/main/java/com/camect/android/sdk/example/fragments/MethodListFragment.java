@@ -1,14 +1,21 @@
 package com.camect.android.sdk.example.fragments;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -25,28 +32,57 @@ import com.camect.android.sdk.model.HomeInfo;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
 
-public class MethodsFragment extends Fragment implements OnItemClickListener {
+public class MethodListFragment extends Fragment implements OnItemClickListener {
 
-    public static MethodsFragment newInstance() {
-        return new MethodsFragment();
+    public static MethodListFragment newInstance() {
+        return new MethodListFragment();
     }
 
     private final ArrayList<Method<?>> mMethods = new ArrayList<>();
 
+    private Button             mButton;
+    private CamectViewModel    mCamectViewModel;
     private ThreadPoolExecutor mExecutor;
-    private CamectViewModel    mViewModel;
 
-    private void buildList() {
+    private void buildMethodList() {
         mMethods.clear();
 
+        mMethods.add(new Method<String>("Get 24 Hr Access Token") {
+            @Override
+            protected String doInBackground(Void... voids) {
+                String accessToken = CamectSDK.getInstance().getAccessToken(24 * 3600);
+
+                if (TextUtils.isEmpty(accessToken)) {
+                    accessToken = "FAILED";
+                }
+
+                return accessToken;
+            }
+        });
         mMethods.add(new Method<HomeInfo>("Get Home Info") {
             @Override
             protected HomeInfo doInBackground(Void... voids) {
-                HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
+                if (mCamectViewModel.getHomeInfo() == null) {
+                    HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
 
-                mViewModel.setHomeInfo(homeInfo);
+                    mCamectViewModel.setHomeInfo(homeInfo);
+                }
 
-                return mViewModel.getHomeInfo();
+                return mCamectViewModel.getHomeInfo();
+            }
+        });
+        mMethods.add(new Method<Void>("Set Home Name") {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void result) {
+                showNamePrompt();
+
+                // reset this task so it can run again
+                reset();
             }
         });
         mMethods.add(new Method<HomeInfo>("Set Mode to HOME") {
@@ -55,10 +91,10 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
                 if (CamectSDK.getInstance().setMode(CamectSDK.Mode.HOME)) {
                     HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
 
-                    mViewModel.setHomeInfo(homeInfo);
+                    mCamectViewModel.setHomeInfo(homeInfo);
                 }
 
-                return mViewModel.getHomeInfo();
+                return mCamectViewModel.getHomeInfo();
             }
         });
         mMethods.add(new Method<HomeInfo>("Set Mode to AWAY") {
@@ -67,10 +103,22 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
                 if (CamectSDK.getInstance().setMode(CamectSDK.Mode.AWAY)) {
                     HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
 
-                    mViewModel.setHomeInfo(homeInfo);
+                    mCamectViewModel.setHomeInfo(homeInfo);
                 }
 
-                return mViewModel.getHomeInfo();
+                return mCamectViewModel.getHomeInfo();
+            }
+        });
+        mMethods.add(new Method<Void>("Disable Alerts For Home") {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                return null;
+            }
+        });
+        mMethods.add(new Method<Void>("Enable Alerts For Home") {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                return null;
             }
         });
         mMethods.add(new Method<ArrayList<Camera>>("List Cameras") {
@@ -81,10 +129,10 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
 
             @Override
             protected void onPostExecute(ArrayList<Camera> cameras) {
-                mViewModel.setCameras(cameras);
+                mCamectViewModel.setCameras(cameras);
 
                 getFragmentManager().beginTransaction()
-                        .replace(R.id.container, CamerasFragment.newInstance())
+                        .replace(R.id.container, CameraListFragment.newInstance())
                         .addToBackStack("cameras")
                         .commit();
 
@@ -114,19 +162,82 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        mViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
+        mCamectViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
 
         mExecutor = AsyncTask.newSingleThreadExecutor();
 
-        buildList();
+        buildMethodList();
 
         DividerItemDecoration decoration = new DividerItemDecoration(getContext(),
                 DividerItemDecoration.VERTICAL);
 
-        RecyclerView recyclerView = (RecyclerView) view;
+        RecyclerView recyclerView = view.findViewById(R.id.list);
         recyclerView.addItemDecoration(decoration);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(new MethodsAdapter(getActivity(), this));
+        recyclerView.setAdapter(new MethodListAdapter(getActivity(), this));
+    }
+
+    private void showNamePrompt() {
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_name_input, null,
+                false);
+
+        final EditText editText = view.findViewById(R.id.text_input_box);
+        editText.setText(mCamectViewModel.getHomeInfo().getName());
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                mButton.setEnabled(!TextUtils.isEmpty(s.toString().trim()));
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // not used; here to complete the interface
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // not used; here to complete the interface
+            }
+        });
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setCancelable(false)
+                .setTitle("Set Home Name")
+                .setView(view)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> new AsyncTask<Void,
+                        Void, HomeInfo>(mExecutor) {
+
+                    @Override
+                    protected HomeInfo doInBackground(Void... voids) {
+                        String name = editText.getText().toString().trim();
+                        if (CamectSDK.getInstance().setHomeName(name)) {
+                            HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
+
+                            mCamectViewModel.setHomeInfo(homeInfo);
+                        }
+
+                        return mCamectViewModel.getHomeInfo();
+                    }
+
+                    @Override
+                    protected void onPostExecute(HomeInfo homeInfo) {
+                        ModelInspectorDialogFragment fragment = ModelInspectorDialogFragment
+                                .newInstance("Set Home Info", homeInfo.toString());
+
+                        fragment.show(getChildFragmentManager(), null);
+                    }
+                }.executeNow());
+
+        AlertDialog alert = builder.create();
+
+        alert.setOnShowListener(dialog -> {
+            String name = editText.getText().toString().trim();
+
+            mButton = alert.getButton(DialogInterface.BUTTON_POSITIVE);
+            mButton.setEnabled(!TextUtils.isEmpty(name));
+        });
+
+        alert.show();
     }
 
     private static class MethodViewHolder extends RecyclerView.ViewHolder {
@@ -169,12 +280,12 @@ public class MethodsFragment extends Fragment implements OnItemClickListener {
         }
     }
 
-    private class MethodsAdapter extends RecyclerView.Adapter<MethodViewHolder> {
+    private class MethodListAdapter extends RecyclerView.Adapter<MethodViewHolder> {
 
         private final LayoutInflater      mInflater;
         private final OnItemClickListener mListener;
 
-        public MethodsAdapter(Context context, OnItemClickListener listener) {
+        public MethodListAdapter(Context context, OnItemClickListener listener) {
             mInflater = LayoutInflater.from(context);
             mListener = listener;
         }

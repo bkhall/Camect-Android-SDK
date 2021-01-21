@@ -14,10 +14,10 @@ import androidx.fragment.app.DialogFragment;
 
 import com.camect.android.sdk.R;
 
-public class ModelInspectorDialogFragment extends DialogFragment {
+public class ObjectAlertChooserDialogFragment extends DialogFragment {
 
-    public static ModelInspectorDialogFragment newInstance(String title, String text) {
-        ModelInspectorDialogFragment fragment = new ModelInspectorDialogFragment();
+    public static ObjectAlertChooserDialogFragment newInstance(String title, String text) {
+        ObjectAlertChooserDialogFragment fragment = new ObjectAlertChooserDialogFragment();
         fragment.mText = text;
         fragment.mTitle = title;
 

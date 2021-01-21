@@ -3,6 +3,8 @@ package com.camect.android.sdk.example.activities;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
 
 import com.camect.android.sdk.BuildConfig;
 import com.camect.android.sdk.CamectSDK;

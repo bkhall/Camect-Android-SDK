@@ -29,11 +29,12 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
     public static MainFragment newInstance() {
         return new MainFragment();
     }
+
     private EditText           mCamectId;
+    private CamectViewModel    mCamectViewModel;
     private Button             mConnect;
     private ThreadPoolExecutor mExecutor;
     private EditText           mPassword;
-    private CamectViewModel    mViewModel;
 
     @Override
     public void afterTextChanged(Editable s) {
@@ -51,15 +52,15 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
 
             @Override
             protected HomeInfo doInBackground(Void... voids) {
-                if (mViewModel.getHomeInfo() == null) {
+                if (mCamectViewModel.getHomeInfo() == null) {
                     publishProgress(null);
 
                     HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
 
-                    mViewModel.setHomeInfo(homeInfo);
+                    mCamectViewModel.setHomeInfo(homeInfo);
                 }
 
-                return mViewModel.getHomeInfo();
+                return mCamectViewModel.getHomeInfo();
             }
 
             @Override
@@ -77,7 +78,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
                     CamectSDK.getInstance().updateHost(homeInfo.getId());
 
                     getFragmentManager().beginTransaction()
-                            .replace(R.id.container, MethodsFragment.newInstance())
+                            .replace(R.id.container, MethodListFragment.newInstance())
                             .commit();
                 }
             }
@@ -135,7 +136,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        mViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
+        mCamectViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
 
         mExecutor = AsyncTask.newSingleThreadExecutor();
 

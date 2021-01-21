@@ -1,6 +1,7 @@
 package com.camect.android.sdk;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.TextUtils;
@@ -10,6 +11,8 @@ import android.webkit.WebSettings;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
 
 import com.camect.android.sdk.model.Camera;
 import com.camect.android.sdk.model.HomeInfo;
@@ -65,10 +68,11 @@ public class CamectSDK {
         }
     }
 
-    private final Context mContext;
-    private final String  mPassword;
-    private final String  mUserAgent;
-    private final String  mUsername;
+    private final Context           mContext;
+    private final String            mPassword;
+    private final SharedPreferences mPreferences;
+    private final String            mUserAgent;
+    private final String            mUsername;
 
     private String       mHost;
     private String       mHostUrl;
@@ -86,9 +90,105 @@ public class CamectSDK {
         mUsername = username;
         mPassword = password;
 
+        try {
+            MasterKey masterKey = new MasterKey.Builder(context, "camect_api_master_key")
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build();
+
+            mPreferences = EncryptedSharedPreferences.create(
+                    mContext,
+                    "camect_api_settings",
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
+            throw new RuntimeException("Could not create secure preferences.");
+        }
+
         updateHost(host);
     }
 
+    @WorkerThread
+    public boolean disableAlert(@NonNull String reason, @NonNull String... cameraIds) {
+        return enableAlert(reason, false, cameraIds);
+    }
+
+    @WorkerThread
+    public boolean disableAlertGlobal(@NonNull String reason) {
+        return enableAlert(reason, false, (String[]) null);
+    }
+
+    @WorkerThread
+    public boolean enableAlert(@NonNull String reason, @NonNull String... cameraIds) {
+        return enableAlert(reason, true, cameraIds);
+    }
+
+    private boolean enableAlert(@NonNull String reason, boolean enable,
+                                @Nullable String... cameraIds) {
+        HttpUrl.Builder builder = HttpUrl.parse(mHostUrl + "EnableAlert").newBuilder()
+                .addQueryParameter("Reason", reason)
+                .addQueryParameter("Enable", enable ? "1" : "0");
+
+        if (cameraIds != null) {
+            for (int i = 0; i < cameraIds.length; i++) {
+                builder.addQueryParameter("CamId[" + i + "]", cameraIds[i]);
+            }
+        }
+
+        HttpUrl url = builder.build();
+
+        Request request = getStandardRequest()
+                .url(url)
+                .get()
+                .build();
+
+        try (Response response = mHttpClient.newCall(request).execute()) {
+            return response.isSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    @WorkerThread
+    public boolean enableAlertGlobal(@NonNull String reason) {
+        return enableAlert(reason, true, (String[]) null);
+    }
+
+    @Nullable
+    @WorkerThread
+    public String getAccessToken(int durationSeconds) {
+        int expiration = (int) (System.currentTimeMillis() / 1000) + durationSeconds;
+
+        HttpUrl url = HttpUrl.parse(mHostUrl + "GenerateAccessToken").newBuilder()
+                .addQueryParameter("ExpirationTs", String.valueOf(expiration))
+                .build();
+
+        Request request = getStandardRequest()
+                .url(url)
+                .get()
+                .build();
+
+        try (Response response = mHttpClient.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String json = response.body().string();
+
+                JSONObject jsonObject = new JSONObject(json);
+
+                return jsonObject.getString("token");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Nullable
     @WorkerThread
     public Bitmap getCameraSnapshot(@NonNull String cameraId, int width, int height) {
         HttpUrl url = HttpUrl.parse(mHostUrl + "SnapshotCamera").newBuilder()
@@ -179,6 +279,27 @@ public class CamectSDK {
                 .header("User-Agent", mUserAgent);
     }
 
+    @Nullable
+    @WorkerThread
+    public boolean setHomeName(@NonNull String name) {
+        HttpUrl url = HttpUrl.parse(mHostUrl + "SetHomeName").newBuilder()
+                .addQueryParameter("Name", name)
+                .build();
+
+        Request request = getStandardRequest()
+                .url(url)
+                .get()
+                .build();
+
+        try (Response response = mHttpClient.newCall(request).execute()) {
+            return response.isSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
     @WorkerThread
     public boolean setMode(@NonNull Mode mode) {
         HttpUrl url = HttpUrl.parse(mHostUrl + "SetOperationMode").newBuilder()
@@ -199,6 +320,7 @@ public class CamectSDK {
         return false;
     }
 
+    @Nullable
     @WorkerThread
     public String startHlsStream(@NonNull String cameraId) {
         HttpUrl url = HttpUrl.parse(mHostUrl + "StartStreaming").newBuilder()
