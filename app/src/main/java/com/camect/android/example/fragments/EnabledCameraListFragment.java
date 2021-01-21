@@ -1,9 +1,11 @@
 package com.camect.android.example.fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -62,12 +64,12 @@ public class EnabledCameraListFragment extends Fragment implements OnItemClickLi
     public void onItemClick(View view, int position, long id) {
         Camera camera = mCamectViewModel.getEnabledCameras().get(position);
 
-//        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(camera.getStreamingUrl()));
-//        Intent chooser = Intent.createChooser(intent, "View Stream With");
-//
-//        startActivity(chooser);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(camera.getStreamingUrl()));
+        Intent chooser = Intent.createChooser(intent, "View Stream With");
 
-        LiveViewActivity.launch(requireContext(), camera.getStreamingUrl());
+        startActivity(chooser);
+
+//        LiveViewActivity.launch(requireContext(), camera.getStreamingUrl());
     }
 
     @Override
