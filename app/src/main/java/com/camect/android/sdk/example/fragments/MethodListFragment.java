@@ -178,18 +178,18 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
 
         buildMethodList();
 
-        DividerItemDecoration decoration = new DividerItemDecoration(getContext(),
+        DividerItemDecoration decoration = new DividerItemDecoration(requireContext(),
                 DividerItemDecoration.VERTICAL);
 
         RecyclerView recyclerView = view.findViewById(R.id.list);
         recyclerView.addItemDecoration(decoration);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(new MethodListAdapter(getActivity(), this));
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerView.setAdapter(new MethodListAdapter(requireContext(), this));
     }
 
     private void showNamePrompt() {
-        View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_name_input, null,
-                false);
+        View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_name_input,
+                null, false);
 
         final EditText editText = view.findViewById(R.id.text_input_box);
         editText.setText(mCamectViewModel.getHomeInfo().getName());
@@ -210,7 +210,7 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
             }
         });
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setCancelable(false)
                 .setTitle("Set Home Name")
                 .setView(view)

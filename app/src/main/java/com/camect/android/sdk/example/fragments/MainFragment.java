@@ -118,7 +118,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
         String camectId = mCamectId.getText().toString();
         String password = mPassword.getText().toString();
 
-        CamectSDK.init(getContext(), camectId.trim(), password.trim());
+        CamectSDK.init(requireContext(), camectId.trim(), password.trim());
 
         getHomeInfo();
     }

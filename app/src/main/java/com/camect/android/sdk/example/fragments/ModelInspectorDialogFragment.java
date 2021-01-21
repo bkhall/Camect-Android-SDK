@@ -36,7 +36,7 @@ public class ModelInspectorDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         ensureViewModel();
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setCancelable(false);
         builder.setTitle(mInspectorViewModel.getTitle());
         builder.setPositiveButton(android.R.string.ok, null);

@@ -5,16 +5,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-
 import com.camect.android.sdk.R;
 import com.camect.android.sdk.example.viewmodels.CamectViewModel;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.ui.StyledPlayerView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 public class StreamFragment extends Fragment {
 
@@ -42,7 +42,7 @@ public class StreamFragment extends Fragment {
         CamectViewModel viewModel = new ViewModelProvider(requireActivity())
                 .get(CamectViewModel.class);
 
-        mExoPlayer = new SimpleExoPlayer.Builder(getActivity()).build();
+        mExoPlayer = new SimpleExoPlayer.Builder(requireContext()).build();
 
         StyledPlayerView playerView = view.findViewById(R.id.player_view);
 

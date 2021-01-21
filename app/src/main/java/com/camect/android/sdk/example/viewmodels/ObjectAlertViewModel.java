@@ -1,13 +1,16 @@
 package com.camect.android.sdk.example.viewmodels;
 
+import android.text.TextUtils;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import androidx.lifecycle.ViewModel;
 
 public class ObjectAlertViewModel extends ViewModel {
     private String    mCameraId;
     private boolean[] mChecked;
-    private String[] mLabels;
+    private String[]  mLabels;
 
     public String getCameraId() {
         return mCameraId;
@@ -32,6 +35,19 @@ public class ObjectAlertViewModel extends ViewModel {
     }
 
     public void setCameraId(String cameraId) {
+        if (mChecked != null) {
+            // is this new id different from before
+            // if so, clear the boolean array
+            if ((!TextUtils.isEmpty(cameraId) && TextUtils.isEmpty(mCameraId)) ||
+                    (TextUtils.isEmpty(cameraId) && !TextUtils.isEmpty(mCameraId))) {
+                Arrays.fill(mChecked, false);
+            } else if (!TextUtils.isEmpty(cameraId) && !TextUtils.isEmpty(mCameraId)) {
+                if (!cameraId.equals(mCameraId)) {
+                    Arrays.fill(mChecked, false);
+                }
+            }
+        }
+
         mCameraId = cameraId;
     }
 }

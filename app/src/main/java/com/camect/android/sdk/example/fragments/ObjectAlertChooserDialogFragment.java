@@ -34,7 +34,7 @@ public class ObjectAlertChooserDialogFragment extends DialogFragment {
         final boolean[] checked = alertViewModel.getChecked();
         final String cameraId = alertViewModel.getCameraId();
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setCancelable(false)
                 .setTitle(TextUtils.isEmpty(cameraId) ?
                         "Select Alerts For Home" : "Select Alerts For Camera")

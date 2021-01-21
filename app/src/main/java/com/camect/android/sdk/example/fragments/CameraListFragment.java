@@ -107,10 +107,10 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
         mSwipe = view.findViewById(R.id.swipe);
         mSwipe.setEnabled(true);
 
-        mListAdapter = new CameraListAdapter(getActivity(), this, this);
+        mListAdapter = new CameraListAdapter(requireContext(), this, this);
 
         RecyclerView recyclerView = view.findViewById(R.id.list);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(mListAdapter);
     }
 
