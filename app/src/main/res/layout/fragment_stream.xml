@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".example.fragments.StreamFragment">
+    tools:context="com.camect.android.example.fragments.StreamFragment">
 
     <com.google.android.exoplayer2.ui.StyledPlayerView
         android:id="@+id/player_view"
