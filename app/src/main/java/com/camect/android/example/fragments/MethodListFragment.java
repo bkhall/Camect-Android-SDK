@@ -22,12 +22,10 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.camect.android.library.CamectSDK;
 import com.camect.android.example.R;
 import com.camect.android.example.util.AsyncTask;
 import com.camect.android.example.viewmodels.CamectViewModel;
-import com.camect.android.example.viewmodels.ModelInspectorViewModel;
-import com.camect.android.example.viewmodels.ObjectAlertViewModel;
+import com.camect.android.library.CamectSDK;
 import com.camect.android.library.model.HomeInfo;
 
 import java.util.ArrayList;
@@ -41,11 +39,9 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
 
     private final ArrayList<Method<?>> mMethods = new ArrayList<>();
 
-    private ObjectAlertViewModel    mAlertViewModel;
-    private Button                  mButton;
-    private CamectViewModel         mCamectViewModel;
-    private ThreadPoolExecutor      mExecutor;
-    private ModelInspectorViewModel mInspectorViewModel;
+    private Button             mButton;
+    private CamectViewModel    mCamectViewModel;
+    private ThreadPoolExecutor mExecutor;
 
     private void buildMethodList() {
         mMethods.clear();
@@ -116,9 +112,7 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
 
             @Override
             protected void onPostExecute(Void result) {
-                mAlertViewModel.setCameraId(null);
-
-                ObjectAlertChooserDialogFragment.newInstance()
+                ObjectAlertChooserDialogFragment.newInstance(null)
                         .show(getChildFragmentManager(), null);
             }
         });
@@ -165,11 +159,8 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        mCamectViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
-        mInspectorViewModel = new ViewModelProvider(requireActivity())
-                .get(ModelInspectorViewModel.class);
-        mAlertViewModel = new ViewModelProvider(requireActivity())
-                .get(ObjectAlertViewModel.class);
+        mCamectViewModel = new ViewModelProvider(requireActivity())
+                .get(CamectViewModel.class);
 
         mExecutor = AsyncTask.newSingleThreadExecutor();
 
@@ -226,10 +217,8 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
 
                     @Override
                     protected void onPostExecute(HomeInfo homeInfo) {
-                        mInspectorViewModel.setTitle("Set Home Info");
-                        mInspectorViewModel.setText(homeInfo.toString());
-
-                        ModelInspectorDialogFragment.newInstance()
+                        ModelInspectorDialogFragment.newInstance("Set Home Info",
+                                homeInfo.toString())
                                 .show(getChildFragmentManager(), null);
                     }
                 }.executeNow());
@@ -276,10 +265,7 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
 
         @Override
         protected void onPostExecute(T result) {
-            mInspectorViewModel.setTitle(mName);
-            mInspectorViewModel.setText(result.toString());
-
-            ModelInspectorDialogFragment.newInstance()
+            ModelInspectorDialogFragment.newInstance(mName, result.toString())
                     .show(getChildFragmentManager(), null);
 
             // reset this task so it can run again

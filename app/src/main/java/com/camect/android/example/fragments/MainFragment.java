@@ -10,21 +10,20 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.camect.android.library.CamectSDK;
-import com.camect.android.example.R;
-import com.camect.android.example.util.AsyncTask;
-import com.camect.android.example.viewmodels.CamectViewModel;
-import com.camect.android.example.viewmodels.ModelInspectorViewModel;
-import com.camect.android.example.viewmodels.ObjectAlertViewModel;
-import com.camect.android.library.model.HomeInfo;
-import com.google.android.material.snackbar.Snackbar;
-
-import java.util.concurrent.ThreadPoolExecutor;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+
+import com.camect.android.example.R;
+import com.camect.android.example.util.AsyncTask;
+import com.camect.android.example.viewmodels.CamectViewModel;
+import com.camect.android.example.viewmodels.ObjectAlertViewModel;
+import com.camect.android.library.CamectSDK;
+import com.camect.android.library.model.HomeInfo;
+import com.google.android.material.snackbar.Snackbar;
+
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class MainFragment extends Fragment implements View.OnClickListener, TextWatcher {
 
@@ -32,13 +31,12 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
         return new MainFragment();
     }
 
-    private EditText                mCamectId;
-    private CamectViewModel         mCamectViewModel;
-    private Button                  mConnect;
-    private ThreadPoolExecutor      mExecutor;
-    private ModelInspectorViewModel mInspectorViewModel;
-    private ObjectAlertViewModel    mObjectAlertViewModel;
-    private EditText                mPassword;
+    private ObjectAlertViewModel mAlertViewModel;
+    private EditText             mCamectId;
+    private CamectViewModel      mCamectViewModel;
+    private Button               mConnect;
+    private ThreadPoolExecutor   mExecutor;
+    private EditText             mPassword;
 
     @Override
     public void afterTextChanged(Editable s) {
@@ -63,7 +61,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
 
                     if (homeInfo != null) {
                         mCamectViewModel.setHomeInfo(homeInfo);
-                        mObjectAlertViewModel.prepare(homeInfo.getObjectNames());
+                        mAlertViewModel.prepare(homeInfo.getObjectNames());
                     }
                 }
 
@@ -77,10 +75,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
                 }
 
                 if (homeInfo == null) {
-                    mInspectorViewModel.setTitle("Connection Failed");
-                    mInspectorViewModel.setText(null);
-
-                    ModelInspectorDialogFragment.newInstance()
+                    ModelInspectorDialogFragment.newInstance("Connection Failed", null)
                             .show(getChildFragmentManager(), null);
                 } else {
                     CamectSDK.getInstance().updateHost(homeInfo.getId());
@@ -144,10 +139,9 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        mCamectViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
-        mInspectorViewModel = new ViewModelProvider(requireActivity())
-                .get(ModelInspectorViewModel.class);
-        mObjectAlertViewModel = new ViewModelProvider(requireActivity())
+        mCamectViewModel = new ViewModelProvider(requireActivity())
+                .get(CamectViewModel.class);
+        mAlertViewModel = new ViewModelProvider(requireActivity())
                 .get(ObjectAlertViewModel.class);
 
         mExecutor = AsyncTask.newSingleThreadExecutor();

@@ -12,17 +12,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.camect.android.library.CamectSDK;
-import com.camect.android.example.R;
-import com.camect.android.example.util.AsyncTask;
-import com.camect.android.example.viewmodels.CamectViewModel;
-import com.camect.android.example.viewmodels.ModelInspectorViewModel;
-import com.camect.android.example.viewmodels.ObjectAlertViewModel;
-import com.camect.android.library.model.Camera;
-import com.google.android.material.snackbar.Snackbar;
-
-import java.util.concurrent.ThreadPoolExecutor;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
@@ -34,6 +23,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.camect.android.example.R;
+import com.camect.android.example.activities.LiveViewActivity;
+import com.camect.android.example.util.AsyncTask;
+import com.camect.android.example.viewmodels.CamectViewModel;
+import com.camect.android.library.CamectSDK;
+import com.camect.android.library.model.Camera;
+import com.google.android.material.snackbar.Snackbar;
+
+import java.util.concurrent.ThreadPoolExecutor;
+
 public class CameraListFragment extends Fragment implements OnItemClickListener,
         OnItemLongClickListener, SwipeRefreshLayout.OnRefreshListener {
 
@@ -41,12 +40,10 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
         return new CameraListFragment();
     }
 
-    private ObjectAlertViewModel    mAlertViewModel;
-    private CamectViewModel         mCamectViewModel;
-    private ThreadPoolExecutor      mExecutor;
-    private ModelInspectorViewModel mInspectorViewModel;
-    private CameraListAdapter       mListAdapter;
-    private SwipeRefreshLayout      mSwipe;
+    private CamectViewModel    mCamectViewModel;
+    private ThreadPoolExecutor mExecutor;
+    private CameraListAdapter  mListAdapter;
+    private SwipeRefreshLayout mSwipe;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -92,10 +89,6 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mCamectViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
-        mInspectorViewModel = new ViewModelProvider(requireActivity())
-                .get(ModelInspectorViewModel.class);
-        mAlertViewModel = new ViewModelProvider(requireActivity())
-                .get(ObjectAlertViewModel.class);
 
         mExecutor = AsyncTask.newCachedThreadPool();
 
@@ -231,9 +224,7 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
 
                     return true;
                 } else if (id == R.id.alerts) {
-                    mAlertViewModel.setCameraId(mCamera.getId());
-
-                    ObjectAlertChooserDialogFragment.newInstance()
+                    ObjectAlertChooserDialogFragment.newInstance(mCamera.getId())
                             .show(getChildFragmentManager(), null);
 
                     return true;

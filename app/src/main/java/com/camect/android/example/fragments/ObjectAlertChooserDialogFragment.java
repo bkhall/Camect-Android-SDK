@@ -4,29 +4,46 @@ import android.app.Dialog;
 import android.os.Bundle;
 import android.text.TextUtils;
 
-import com.camect.android.library.CamectSDK;
-import com.camect.android.example.util.AsyncTask;
-import com.camect.android.example.viewmodels.ObjectAlertViewModel;
-
-import java.util.concurrent.ThreadPoolExecutor;
-
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.camect.android.example.util.AsyncTask;
+import com.camect.android.example.viewmodels.ObjectAlertViewModel;
+import com.camect.android.library.CamectSDK;
+
+import java.util.concurrent.ThreadPoolExecutor;
+
 public class ObjectAlertChooserDialogFragment extends DialogFragment {
 
-    public static ObjectAlertChooserDialogFragment newInstance() {
-        return new ObjectAlertChooserDialogFragment();
+    public static ObjectAlertChooserDialogFragment newInstance(@Nullable String cameraId) {
+        ObjectAlertChooserDialogFragment fragment = new ObjectAlertChooserDialogFragment();
+        Bundle bundle = new Bundle();
+        if (!TextUtils.isEmpty(cameraId)) {
+            bundle.putString("cameraId", cameraId);
+        }
+
+        fragment.setArguments(bundle);
+
+        return fragment;
     }
 
     private ThreadPoolExecutor mExecutor;
 
     @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        ObjectAlertViewModel alertViewModel =
-                new ViewModelProvider(requireActivity()).get(ObjectAlertViewModel.class);
+        ObjectAlertViewModel alertViewModel = new ViewModelProvider(requireActivity())
+                .get(ObjectAlertViewModel.class);
+
+        Bundle bundle = getArguments();
+        if (bundle != null) {
+            alertViewModel.setCameraId(bundle.getString("cameraId", null));
+
+            // throw it away so we rely on the viewmodel for the rest of the lifecycle
+            setArguments(null);
+        }
 
         mExecutor = AsyncTask.newCachedThreadPool();
 
