@@ -1,6 +1,5 @@
 package com.camect.android.example.fragments;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
@@ -62,7 +61,10 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
     public void onItemClick(View view, int position, long id) {
         Camera camera = mCamectViewModel.getCameras().get(position);
 
-        mCamectViewModel.setSelectedCamera(camera);
+//        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(camera.getStreamingUrl()));
+//        Intent chooser = Intent.createChooser(intent, "View Stream With");
+//
+//        startActivity(chooser);
 
         LiveViewActivity.launch(requireContext(), camera.getStreamingUrl());
     }
@@ -205,11 +207,6 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
                 mSnapshot.setOnLongClickListener(v -> longListener.onItemLongClick(view,
                         getAdapterPosition(), getItemId()));
             }
-        }
-
-        private void showAlertsDialog() {
-            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-
         }
 
         private void showPopupMenu() {

@@ -7,12 +7,12 @@ import com.camect.android.library.model.Camera;
 import com.camect.android.library.model.HomeInfo;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class CamectViewModel extends ViewModel {
     private final ArrayList<Camera> mCameras = new ArrayList<>();
 
     private HomeInfo mHomeInfo;
-    private Camera   mSelectedCamera;
 
     @NonNull
     public ArrayList<Camera> getCameras() {
@@ -21,10 +21,6 @@ public class CamectViewModel extends ViewModel {
 
     public HomeInfo getHomeInfo() {
         return mHomeInfo;
-    }
-
-    public Camera getSelectedCamera() {
-        return mSelectedCamera;
     }
 
     public void setCameras(@NonNull ArrayList<Camera> cameras) {
@@ -37,13 +33,14 @@ public class CamectViewModel extends ViewModel {
 
             mCameras.add(camera);
         }
+
+        if (mCameras.size() > 1) {
+            Collections.sort(mCameras, (thisCamera, thatCamera) -> thisCamera.getName()
+                    .compareTo(thatCamera.getName()));
+        }
     }
 
     public void setHomeInfo(HomeInfo homeInfo) {
         mHomeInfo = homeInfo;
-    }
-
-    public void setSelectedCamera(@NonNull Camera selectedCamera) {
-        mSelectedCamera = selectedCamera;
     }
 }
