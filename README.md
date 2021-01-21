@@ -8,4 +8,5 @@ then, install a 3rd-party app that can play RTSP streams, like VLC or TinyCam. T
 will detect it and play the stream in the other app.
 
 VLC for Android: https://play.google.com/store/apps/details?id=org.videolan.vlc
+
 tinyCam: https://play.google.com/store/apps/details?id=com.alexvas.dvr
