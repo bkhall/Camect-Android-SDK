@@ -7,39 +7,44 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.camect.android.sdk.R;
+import com.camect.android.sdk.example.viewmodels.ModelInspectorViewModel;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
-
-import com.camect.android.sdk.R;
+import androidx.lifecycle.ViewModelProvider;
 
 public class ModelInspectorDialogFragment extends DialogFragment {
 
-    public static ModelInspectorDialogFragment newInstance(String title, String text) {
-        ModelInspectorDialogFragment fragment = new ModelInspectorDialogFragment();
-        fragment.mText = text;
-        fragment.mTitle = title;
-
-        return fragment;
+    public static ModelInspectorDialogFragment newInstance() {
+        return new ModelInspectorDialogFragment();
     }
 
-    private AlertDialog mAlertDialog;
-    private String      mText;
-    private String      mTitle;
+    private AlertDialog             mAlertDialog;
+    private ModelInspectorViewModel mInspectorViewModel;
+
+    private void ensureViewModel() {
+        if (mInspectorViewModel == null) {
+            mInspectorViewModel = new ViewModelProvider(requireActivity())
+                    .get(ModelInspectorViewModel.class);
+        }
+    }
 
     @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        ensureViewModel();
+
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setCancelable(false);
-        builder.setTitle(mTitle);
+        builder.setTitle(mInspectorViewModel.getTitle());
         builder.setPositiveButton(android.R.string.ok, null);
 
         mAlertDialog = builder.create();
 
         return mAlertDialog;
     }
-
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -49,9 +54,11 @@ public class ModelInspectorDialogFragment extends DialogFragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        ensureViewModel();
+
         TextView textView = view.findViewById(R.id.model_text);
 
-        textView.setText(mText);
+        textView.setText(mInspectorViewModel.getText());
 
         mAlertDialog.setView(view);
     }

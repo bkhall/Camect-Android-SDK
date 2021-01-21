@@ -10,7 +10,15 @@ public class ModelInspectorViewModel extends ViewModel {
         return mText;
     }
 
+    public String getTitle() {
+        return mTitle;
+    }
+
     public void setText(String text) {
         mText = text;
+    }
+
+    public void setTitle(String title) {
+        mTitle = title;
     }
 }

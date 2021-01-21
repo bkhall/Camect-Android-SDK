@@ -12,6 +12,16 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.camect.android.sdk.CamectSDK;
+import com.camect.android.sdk.R;
+import com.camect.android.sdk.example.util.AsyncTask;
+import com.camect.android.sdk.example.viewmodels.CamectViewModel;
+import com.camect.android.sdk.example.viewmodels.ModelInspectorViewModel;
+import com.camect.android.sdk.model.Camera;
+import com.google.android.material.snackbar.Snackbar;
+
+import java.util.concurrent.ThreadPoolExecutor;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
@@ -23,15 +33,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.camect.android.sdk.CamectSDK;
-import com.camect.android.sdk.R;
-import com.camect.android.sdk.example.util.AsyncTask;
-import com.camect.android.sdk.example.viewmodels.CamectViewModel;
-import com.camect.android.sdk.model.Camera;
-import com.google.android.material.snackbar.Snackbar;
-
-import java.util.concurrent.ThreadPoolExecutor;
-
 public class CameraListFragment extends Fragment implements OnItemClickListener,
         OnItemLongClickListener, SwipeRefreshLayout.OnRefreshListener {
 
@@ -39,10 +40,11 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
         return new CameraListFragment();
     }
 
-    private CamectViewModel    mCamectViewModel;
-    private ThreadPoolExecutor mExecutor;
-    private CameraListAdapter  mListAdapter;
-    private SwipeRefreshLayout mSwipe;
+    private CamectViewModel         mCamectViewModel;
+    private ThreadPoolExecutor      mExecutor;
+    private ModelInspectorViewModel mInspectorViewModel;
+    private CameraListAdapter       mListAdapter;
+    private SwipeRefreshLayout      mSwipe;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -73,9 +75,10 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
     public boolean onItemLongClick(View view, int position, long id) {
         Camera camera = mCamectViewModel.getCameras().get(position);
 
-        ModelInspectorDialogFragment fragment =
-                ModelInspectorDialogFragment.newInstance(camera.getName(), camera.toString());
-        fragment.show(getChildFragmentManager(), null);
+        mInspectorViewModel.setTitle(camera.getName());
+        mInspectorViewModel.setText(camera.toString());
+
+        ModelInspectorDialogFragment.newInstance().show(getChildFragmentManager(), null);
 
         return true;
     }
@@ -92,6 +95,8 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mCamectViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
+        mInspectorViewModel = new ViewModelProvider(requireActivity())
+                .get(ModelInspectorViewModel.class);
 
         mExecutor = AsyncTask.newCachedThreadPool();
 

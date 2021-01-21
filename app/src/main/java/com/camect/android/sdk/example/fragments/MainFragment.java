@@ -10,19 +10,20 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-
 import com.camect.android.sdk.CamectSDK;
 import com.camect.android.sdk.R;
 import com.camect.android.sdk.example.util.AsyncTask;
 import com.camect.android.sdk.example.viewmodels.CamectViewModel;
+import com.camect.android.sdk.example.viewmodels.ModelInspectorViewModel;
 import com.camect.android.sdk.model.HomeInfo;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.concurrent.ThreadPoolExecutor;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 public class MainFragment extends Fragment implements View.OnClickListener, TextWatcher {
 
@@ -30,11 +31,12 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
         return new MainFragment();
     }
 
-    private EditText           mCamectId;
-    private CamectViewModel    mCamectViewModel;
-    private Button             mConnect;
-    private ThreadPoolExecutor mExecutor;
-    private EditText           mPassword;
+    private EditText                mCamectId;
+    private CamectViewModel         mCamectViewModel;
+    private Button                  mConnect;
+    private ThreadPoolExecutor      mExecutor;
+    private ModelInspectorViewModel mInspectorViewModel;
+    private EditText                mPassword;
 
     @Override
     public void afterTextChanged(Editable s) {
@@ -70,10 +72,11 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
                 }
 
                 if (homeInfo == null) {
-                    ModelInspectorDialogFragment fragment = ModelInspectorDialogFragment
-                            .newInstance("Connection Failed", null);
+                    mInspectorViewModel.setTitle("Connection Failed");
+                    mInspectorViewModel.setText(null);
 
-                    fragment.show(getChildFragmentManager(), null);
+                    ModelInspectorDialogFragment.newInstance()
+                            .show(getChildFragmentManager(), null);
                 } else {
                     CamectSDK.getInstance().updateHost(homeInfo.getId());
 
@@ -137,6 +140,8 @@ public class MainFragment extends Fragment implements View.OnClickListener, Text
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mCamectViewModel = new ViewModelProvider(requireActivity()).get(CamectViewModel.class);
+        mInspectorViewModel =
+                new ViewModelProvider(requireActivity()).get(ModelInspectorViewModel.class);
 
         mExecutor = AsyncTask.newSingleThreadExecutor();
 
