@@ -67,20 +67,15 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
 
         mCamectViewModel.setSelectedCamera(camera);
 
-        getFragmentManager().beginTransaction()
-                .replace(R.id.container, StreamFragment.newInstance())
-                .addToBackStack("stream")
-                .commit();
+        LiveViewActivity.launch(requireContext(), camera.getStreamingUrl());
     }
 
     @Override
     public boolean onItemLongClick(View view, int position, long id) {
         Camera camera = mCamectViewModel.getCameras().get(position);
 
-        mInspectorViewModel.setTitle(camera.getName());
-        mInspectorViewModel.setText(camera.toString());
-
-        ModelInspectorDialogFragment.newInstance().show(getChildFragmentManager(), null);
+        ModelInspectorDialogFragment.newInstance(camera.getName(), camera.toString())
+                .show(getChildFragmentManager(), null);
 
         return true;
     }
