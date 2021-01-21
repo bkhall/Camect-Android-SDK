@@ -114,6 +114,8 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
             protected void onPostExecute(Void result) {
                 ObjectAlertChooserDialogFragment.newInstance(null)
                         .show(getChildFragmentManager(), null);
+
+                reset();
             }
         });
         mMethods.add(new Method<Void>("List Cameras") {
@@ -203,6 +205,7 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
         builder.setCancelable(false)
                 .setTitle("Set Home Name")
                 .setView(view)
+                .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> new AsyncTask<Void,
                         Void, HomeInfo>(mExecutor) {
 
