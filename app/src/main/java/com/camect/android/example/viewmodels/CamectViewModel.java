@@ -10,13 +10,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class CamectViewModel extends ViewModel {
-    private final ArrayList<Camera> mCameras = new ArrayList<>();
+    private final ArrayList<Camera> mAllCameras      = new ArrayList<>();
+    private final ArrayList<Camera> mDisabledCameras = new ArrayList<>();
+    private final ArrayList<Camera> mEnabledCameras  = new ArrayList<>();
 
     private HomeInfo mHomeInfo;
 
     @NonNull
-    public ArrayList<Camera> getCameras() {
-        return mCameras;
+    public ArrayList<Camera> getAllCameras() {
+        return mAllCameras;
+    }
+
+    @NonNull
+    public ArrayList<Camera> getDisabledCameras() {
+        return mDisabledCameras;
+    }
+
+    @NonNull
+    public ArrayList<Camera> getEnabledCameras() {
+        return mEnabledCameras;
     }
 
     public HomeInfo getHomeInfo() {
@@ -24,19 +36,23 @@ public class CamectViewModel extends ViewModel {
     }
 
     public void setCameras(@NonNull ArrayList<Camera> cameras) {
-        mCameras.clear();
+        if (cameras.size() > 1) {
+            Collections.sort(cameras, (thisCamera, thatCamera) -> thisCamera.getName()
+                    .compareTo(thatCamera.getName()));
+        }
+
+        mAllCameras.clear();
+        mDisabledCameras.clear();
+        mEnabledCameras.clear();
+
+        mAllCameras.addAll(cameras);
 
         for (Camera camera : cameras) {
             if (camera.isDisabled()) {
-                continue;
+                mDisabledCameras.add(camera);
+            } else {
+                mEnabledCameras.add(camera);
             }
-
-            mCameras.add(camera);
-        }
-
-        if (mCameras.size() > 1) {
-            Collections.sort(mCameras, (thisCamera, thatCamera) -> thisCamera.getName()
-                    .compareTo(thatCamera.getName()));
         }
     }
 

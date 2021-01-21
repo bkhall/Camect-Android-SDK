@@ -119,7 +119,8 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
         mMethods.add(new Method<Void>("List Cameras") {
             @Override
             protected Void doInBackground(Void... voids) {
-                if (mCamectViewModel.getCameras() == null || mCamectViewModel.getCameras().size() == 0) {
+                if (mCamectViewModel.getAllCameras() == null ||
+                        mCamectViewModel.getAllCameras().size() == 0) {
                     mCamectViewModel.setCameras(CamectSDK.getInstance().getCameras());
                 }
 
@@ -129,7 +130,7 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
             @Override
             protected void onPostExecute(Void result) {
                 getFragmentManager().beginTransaction()
-                        .replace(R.id.container, CameraListFragment.newInstance())
+                        .replace(R.id.container, CameraListPagerFragment.newInstance())
                         .addToBackStack("cameras")
                         .commit();
 

@@ -4,6 +4,12 @@
         android:id="@+id/rename"
         android:title="Rename" />
     <item
+        android:id="@+id/enable"
+        android:title="Enable" />
+    <item
+        android:id="@+id/disable"
+        android:title="Disable" />
+    <item
         android:id="@+id/alerts"
         android:title="Alerts" />
 </menu>

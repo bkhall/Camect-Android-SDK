@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -32,17 +33,17 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
-public class CameraListFragment extends Fragment implements OnItemClickListener,
+public class EnabledCameraListFragment extends Fragment implements OnItemClickListener,
         OnItemLongClickListener, SwipeRefreshLayout.OnRefreshListener {
 
-    public static CameraListFragment newInstance() {
-        return new CameraListFragment();
+    public static EnabledCameraListFragment newInstance() {
+        return new EnabledCameraListFragment();
     }
 
-    private CamectViewModel    mCamectViewModel;
-    private ThreadPoolExecutor mExecutor;
-    private CameraListAdapter  mListAdapter;
-    private SwipeRefreshLayout mSwipe;
+    private CamectViewModel          mCamectViewModel;
+    private ThreadPoolExecutor       mExecutor;
+    private EnabledCameraListAdapter mListAdapter;
+    private SwipeRefreshLayout       mSwipe;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -59,7 +60,7 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
 
     @Override
     public void onItemClick(View view, int position, long id) {
-        Camera camera = mCamectViewModel.getCameras().get(position);
+        Camera camera = mCamectViewModel.getEnabledCameras().get(position);
 
 //        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(camera.getStreamingUrl()));
 //        Intent chooser = Intent.createChooser(intent, "View Stream With");
@@ -71,7 +72,7 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
 
     @Override
     public boolean onItemLongClick(View view, int position, long id) {
-        Camera camera = mCamectViewModel.getCameras().get(position);
+        Camera camera = mCamectViewModel.getEnabledCameras().get(position);
 
         ModelInspectorDialogFragment.newInstance(camera.getName(), camera.toString())
                 .show(getChildFragmentManager(), null);
@@ -97,22 +98,22 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
         mSwipe = view.findViewById(R.id.swipe);
         mSwipe.setEnabled(true);
 
-        mListAdapter = new CameraListAdapter(requireContext(), this, this);
+        mListAdapter = new EnabledCameraListAdapter(requireContext(), this, this);
 
         RecyclerView recyclerView = view.findViewById(R.id.list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(mListAdapter);
     }
 
-    private class CameraListAdapter extends RecyclerView.Adapter<CameraViewHolder> {
+    private class EnabledCameraListAdapter extends RecyclerView.Adapter<EnabledCameraViewHolder> {
 
         private final Context                 mContext;
         private final LayoutInflater          mInflater;
         private final OnItemClickListener     mListener;
         private final OnItemLongClickListener mLongListener;
 
-        public CameraListAdapter(Context context, OnItemClickListener listener,
-                                 OnItemLongClickListener longListener) {
+        public EnabledCameraListAdapter(Context context, OnItemClickListener listener,
+                                        OnItemLongClickListener longListener) {
             mContext = context;
             mInflater = LayoutInflater.from(context);
             mListener = listener;
@@ -121,12 +122,12 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
 
         @Override
         public int getItemCount() {
-            return mCamectViewModel.getCameras().size();
+            return mCamectViewModel.getEnabledCameras().size();
         }
 
         @Override
-        public void onBindViewHolder(@NonNull final CameraViewHolder holder, int position) {
-            final Camera camera = mCamectViewModel.getCameras().get(position);
+        public void onBindViewHolder(@NonNull final EnabledCameraViewHolder holder, int position) {
+            final Camera camera = mCamectViewModel.getEnabledCameras().get(position);
 
             holder.mCamera = camera;
             holder.mName.setText(camera.getName());
@@ -171,23 +172,23 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
 
         @NonNull
         @Override
-        public CameraViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = mInflater.inflate(R.layout.list_item_camera, parent,
+        public EnabledCameraViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = mInflater.inflate(R.layout.list_item_enabled_camera, parent,
                     false);
 
-            return new CameraViewHolder(view, mListener, mLongListener);
+            return new EnabledCameraViewHolder(view, mListener, mLongListener);
         }
     }
 
-    private class CameraViewHolder extends RecyclerView.ViewHolder {
+    private class EnabledCameraViewHolder extends RecyclerView.ViewHolder {
         public final  ImageView mDots;
         public final  TextView  mName;
         public final  ImageView mSnapshot;
         private final Context   mContext;
         public        Camera    mCamera;
 
-        public CameraViewHolder(final View view, final OnItemClickListener listener,
-                                OnItemLongClickListener longListener) {
+        public EnabledCameraViewHolder(final View view, final OnItemClickListener listener,
+                                       OnItemLongClickListener longListener) {
             super(view);
 
             mContext = view.getContext();
@@ -220,6 +221,11 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
                             Snackbar.LENGTH_LONG).show();
 
                     return true;
+                } else if (id == R.id.disable) {
+                    Snackbar.make(mDots, "Need an API reference for this!",
+                            Snackbar.LENGTH_LONG).show();
+
+                    return true;
                 } else if (id == R.id.alerts) {
                     ObjectAlertChooserDialogFragment.newInstance(mCamera.getId())
                             .show(getChildFragmentManager(), null);
@@ -229,6 +235,9 @@ public class CameraListFragment extends Fragment implements OnItemClickListener,
 
                 return false;
             });
+
+            Menu menu = popup.getMenu();
+            menu.findItem(R.id.enable).setVisible(false);
 
             popup.show();
         }
