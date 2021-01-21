@@ -12,10 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.camect.android.example.R;
-import com.camect.android.example.viewmodels.ModelInspectorViewModel;
 
 public class ModelInspectorDialogFragment extends DialogFragment {
 
@@ -34,32 +32,25 @@ public class ModelInspectorDialogFragment extends DialogFragment {
         return fragment;
     }
 
-    private AlertDialog             mAlertDialog;
-    private ModelInspectorViewModel mInspectorViewModel;
+    private AlertDialog mAlertDialog;
+    private String      mText;
+    private String      mTitle;
 
-    private void ensureViewModel() {
-        if (mInspectorViewModel == null) {
-            mInspectorViewModel = new ViewModelProvider(requireActivity())
-                    .get(ModelInspectorViewModel.class);
-        }
-
+    private void ensureData() {
         Bundle bundle = getArguments();
         if (bundle != null) {
-            mInspectorViewModel.setTitle(bundle.getString("title"));
-            mInspectorViewModel.setText(bundle.getString("text", null));
-
-            // throw it away so we rely on the viewmodel for the rest of the lifecycle
-            setArguments(null);
+            mTitle = bundle.getString("title");
+            mText = bundle.getString("text", null);
         }
     }
 
     @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        ensureViewModel();
+        ensureData();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setCancelable(false);
-        builder.setTitle(mInspectorViewModel.getTitle());
+        builder.setTitle(mTitle);
         builder.setPositiveButton(android.R.string.ok, null);
 
         mAlertDialog = builder.create();
@@ -75,11 +66,11 @@ public class ModelInspectorDialogFragment extends DialogFragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        ensureViewModel();
+        ensureData();
 
         TextView textView = view.findViewById(R.id.model_text);
 
-        textView.setText(mInspectorViewModel.getText());
+        textView.setText(mText);
 
         mAlertDialog.setView(view);
     }

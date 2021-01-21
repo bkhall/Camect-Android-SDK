@@ -25,35 +25,40 @@ public class ObjectAlertChooserDialogFragment extends DialogFragment {
             bundle.putString("cameraId", cameraId);
         }
 
+        fragment.mReset = true;
         fragment.setArguments(bundle);
 
         return fragment;
     }
 
+    private String             mCameraId;
     private ThreadPoolExecutor mExecutor;
+    private boolean            mReset;
 
     @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         ObjectAlertViewModel alertViewModel = new ViewModelProvider(requireActivity())
                 .get(ObjectAlertViewModel.class);
 
+        // this only happens on new instance creation
+        // configuration changes will cause the reset flag to be false
+        if (mReset) {
+            alertViewModel.reset();
+        }
+
         Bundle bundle = getArguments();
         if (bundle != null) {
-            alertViewModel.setCameraId(bundle.getString("cameraId", null));
-
-            // throw it away so we rely on the viewmodel for the rest of the lifecycle
-            setArguments(null);
+            mCameraId = bundle.getString("cameraId", null);
         }
 
         mExecutor = AsyncTask.newCachedThreadPool();
 
         final String[] labels = alertViewModel.getLabels();
         final boolean[] checked = alertViewModel.getChecked();
-        final String cameraId = alertViewModel.getCameraId();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setCancelable(false)
-                .setTitle(TextUtils.isEmpty(cameraId) ?
+                .setTitle(TextUtils.isEmpty(mCameraId) ?
                         "Select Alerts For Home" : "Select Alerts For Camera")
                 .setMultiChoiceItems(labels, checked,
                         (dialog, which, isChecked) -> {
@@ -62,13 +67,13 @@ public class ObjectAlertChooserDialogFragment extends DialogFragment {
                             new AsyncTask<Void, Void, Boolean>(mExecutor) {
                                 @Override
                                 protected Boolean doInBackground(Void... voids) {
-                                    if (TextUtils.isEmpty(cameraId)) {
+                                    if (TextUtils.isEmpty(mCameraId)) {
                                         return CamectSDK.getInstance()
                                                 .setAlertForHome(labels[which], isChecked);
                                     } else {
                                         return CamectSDK.getInstance()
                                                 .setAlertForCameras(labels[which], isChecked,
-                                                        cameraId);
+                                                        mCameraId);
                                     }
                                 }
                             }.executeNow();

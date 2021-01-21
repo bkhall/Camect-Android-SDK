@@ -11,10 +11,8 @@ import android.view.View;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.camect.android.example.R;
-import com.camect.android.example.viewmodels.LiveViewViewModel;
 import com.pedro.vlc.VlcListener;
 import com.pedro.vlc.VlcVideoLibrary;
 
@@ -78,8 +76,8 @@ public class LiveViewActivity extends AppCompatActivity implements VlcListener {
         }
     };
 
-    private LiveViewViewModel mViewModel;
-    private boolean           mVisible;
+    private String  mStreamUrl;
+    private boolean mVisible;
 
     private final Runnable mHideRunnable = () -> hide();
 
@@ -117,13 +115,9 @@ public class LiveViewActivity extends AppCompatActivity implements VlcListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_live_view);
 
-        mViewModel = new ViewModelProvider(this).get(LiveViewViewModel.class);
+        mStreamUrl = getIntent().getStringExtra("stream_url");
 
-        if (savedInstanceState == null) {
-            mViewModel.setStreamUrl(getIntent().getStringExtra("stream_url"));
-        }
-
-        if (TextUtils.isEmpty(mViewModel.getStreamUrl())) {
+        if (TextUtils.isEmpty(mStreamUrl)) {
             throw new IllegalArgumentException("Stream url was not passed. Use the static launch " +
                     "method.");
         }
@@ -162,7 +156,7 @@ public class LiveViewActivity extends AppCompatActivity implements VlcListener {
 
     @Override
     public void onResume() {
-        mVlc.play(mViewModel.getStreamUrl());
+        mVlc.play(mStreamUrl);
 
         super.onResume();
     }
