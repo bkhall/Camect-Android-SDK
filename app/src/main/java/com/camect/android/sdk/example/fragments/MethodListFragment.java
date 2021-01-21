@@ -13,18 +13,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.camect.android.sdk.CamectSDK;
-import com.camect.android.sdk.R;
-import com.camect.android.sdk.example.util.AsyncTask;
-import com.camect.android.sdk.example.viewmodels.CamectViewModel;
-import com.camect.android.sdk.example.viewmodels.ModelInspectorViewModel;
-import com.camect.android.sdk.example.viewmodels.ObjectAlertViewModel;
-import com.camect.android.sdk.model.Camera;
-import com.camect.android.sdk.model.HomeInfo;
-
-import java.util.ArrayList;
-import java.util.concurrent.ThreadPoolExecutor;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -33,6 +21,17 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.camect.android.sdk.CamectSDK;
+import com.camect.android.sdk.R;
+import com.camect.android.sdk.example.util.AsyncTask;
+import com.camect.android.sdk.example.viewmodels.CamectViewModel;
+import com.camect.android.sdk.example.viewmodels.ModelInspectorViewModel;
+import com.camect.android.sdk.example.viewmodels.ObjectAlertViewModel;
+import com.camect.android.sdk.model.HomeInfo;
+
+import java.util.ArrayList;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class MethodListFragment extends Fragment implements OnItemClickListener {
 
@@ -93,9 +92,7 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
             @Override
             protected HomeInfo doInBackground(Void... voids) {
                 if (CamectSDK.getInstance().setMode(CamectSDK.Mode.HOME)) {
-                    HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
-
-                    mCamectViewModel.setHomeInfo(homeInfo);
+                    mCamectViewModel.getHomeInfo().setMode(CamectSDK.Mode.HOME.getValue());
                 }
 
                 return mCamectViewModel.getHomeInfo();
@@ -105,9 +102,7 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
             @Override
             protected HomeInfo doInBackground(Void... voids) {
                 if (CamectSDK.getInstance().setMode(CamectSDK.Mode.AWAY)) {
-                    HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
-
-                    mCamectViewModel.setHomeInfo(homeInfo);
+                    mCamectViewModel.getHomeInfo().setMode(CamectSDK.Mode.AWAY.getValue());
                 }
 
                 return mCamectViewModel.getHomeInfo();
@@ -127,16 +122,18 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
                         .show(getChildFragmentManager(), null);
             }
         });
-        mMethods.add(new Method<ArrayList<Camera>>("List Cameras") {
+        mMethods.add(new Method<Void>("List Cameras") {
             @Override
-            protected ArrayList<Camera> doInBackground(Void... voids) {
-                return CamectSDK.getInstance().getCameras();
+            protected Void doInBackground(Void... voids) {
+                if (mCamectViewModel.getCameras() == null || mCamectViewModel.getCameras().size() == 0) {
+                    mCamectViewModel.setCameras(CamectSDK.getInstance().getCameras());
+                }
+
+                return null;
             }
 
             @Override
-            protected void onPostExecute(ArrayList<Camera> cameras) {
-                mCamectViewModel.setCameras(cameras);
-
+            protected void onPostExecute(Void result) {
                 getFragmentManager().beginTransaction()
                         .replace(R.id.container, CameraListFragment.newInstance())
                         .addToBackStack("cameras")
@@ -221,9 +218,7 @@ public class MethodListFragment extends Fragment implements OnItemClickListener 
                     protected HomeInfo doInBackground(Void... voids) {
                         String name = editText.getText().toString().trim();
                         if (CamectSDK.getInstance().setHomeName(name)) {
-                            HomeInfo homeInfo = CamectSDK.getInstance().getHomeInfo();
-
-                            mCamectViewModel.setHomeInfo(homeInfo);
+                            mCamectViewModel.getHomeInfo().setName(name);
                         }
 
                         return mCamectViewModel.getHomeInfo();

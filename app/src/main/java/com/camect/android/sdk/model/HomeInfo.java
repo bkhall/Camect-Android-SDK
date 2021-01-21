@@ -86,13 +86,13 @@ public final class HomeInfo {
         return this;
     }
 
-    HomeInfo setMode(String mode) {
+    public HomeInfo setMode(String mode) {
         mMode = mode;
 
         return this;
     }
 
-    HomeInfo setName(String name) {
+    public HomeInfo setName(String name) {
         mName = name;
 
         return this;
